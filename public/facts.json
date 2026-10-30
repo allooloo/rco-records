@@ -1,0 +1,28 @@
+{
+ "record": "rco-records.ai",
+ "product": "RCO Records — Record of Cleared Orders",
+ "operator": "Allooloo Technologies Corp.",
+ "url": "https://rco-records.ai/",
+ "door": "https://mcp.rco-records.ai/mcp",
+ "as_of": "2026-10-30",
+ "x402": {
+  "api": 0.01,
+  "statement": 0.01,
+  "prices": "$0.01 per paid /api call · $0.01 per statement",
+  "rails": [
+   "x402 USDC on Base (EIP-3009)",
+   "x402 USD — Open USD on Base (Permit2, gas sponsored)"
+  ],
+  "routes": {
+   "api": "https://rco-records.ai/api",
+   "statement": "https://rco-records.ai/api/statement?month=YYYY-MM"
+  },
+  "caller": "the paying wallet: caller = sha256(\"x402:\" + lowercase address); a payer owns its slice from its first paid call",
+  "free": [
+   "verify_receipt (MCP) and https://rco-records.ai/receipts/{id} — always free",
+   "every MCP tool — no 402 on any MCP read"
+  ]
+ },
+ "keyring": "https://rco-records.ai/.well-known/jwks.json",
+ "spec": "https://github.com/allooloo/rco-records"
+}

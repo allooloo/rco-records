@@ -7,13 +7,14 @@ import { JWKS, LINK, ORIGIN, DOOR, agentCard, mcpCard, apiCatalog, llms, robots,
 import { TOOLS } from "./mcp.js";
 import { runExport, exportStatus } from "./export.js";
 import { REGISTER_TOOLS, registerCall, handleAdmin, exportKeys } from "./register.js";
+import { handleApi, API_PATHS } from "./x402.js";   // 2.3.0: the /api 402 door (prices from /facts.json); MCP stays free
 const EXTRA = { tools: REGISTER_TOOLS, call: registerCall };   // RCO-03: the Register
 
 const NEW_APEX = "rco-records.ai", NEW_DOOR = "mcp.rco-records.ai", OLD_APEX = "rco-a2a.ai", OLD_DOOR = "mcp.rco-a2a.ai";
 const PAGES = { "/": "/index.html", "/auditors": "/auditors.html", "/status": "/status.html", "/terms": "/terms.html", "/privacy": "/privacy.html", "/security": "/security.html", "/no-cookies": "/no-cookies.html" };
 const KIT = { "/.well-known/agent-card.json": (env) => J(agentCard(env.VERSION)), "/.well-known/mcp.json": (env) => J(mcpCard(env.VERSION, [...TOOLS, ...REGISTER_TOOLS])), "/.well-known/mcp/server-card.json": (env) => J(mcpCard(env.VERSION, [...TOOLS, ...REGISTER_TOOLS])),
   "/.well-known/jwks.json": () => J(JWKS, "public, max-age=3600"), "/.well-known/api-catalog": () => J(apiCatalog(), "public, max-age=3600", "application/linkset+json"),
-  "/.well-known/security.txt": () => T(securityTxt()), "/llms.txt": (env) => T(llms(env.VERSION)), "/robots.txt": () => T(robots()), "/sitemap.xml": () => T(sitemap(PAGE_PATHS), "application/xml; charset=utf-8") };
+  "/.well-known/security.txt": () => T(securityTxt()), "/facts.json": async (env, req) => J(await (await env.ASSETS.fetch(new Request(new URL(req.url).origin + "/facts.json"))).json(), "public, max-age=300"), "/llms.txt": (env) => T(llms(env.VERSION)), "/robots.txt": () => T(robots()), "/sitemap.xml": () => T(sitemap(PAGE_PATHS), "application/xml; charset=utf-8") };
 const J = (o, cache = "no-store", ct = "application/json; charset=utf-8") => new Response(JSON.stringify(o, null, 1), { status: 200, headers: { "content-type": ct, "cache-control": cache, "access-control-allow-origin": "*" } });
 const T = (s, ct = "text/plain; charset=utf-8") => new Response(s, { status: 200, headers: { "content-type": ct, "cache-control": "public, max-age=300" } });
 const notFound = (p) => new Response(JSON.stringify({ error: "not_found", path: p, door: DOOR, page: ORIGIN + "/" }), { status: 404, headers: { "content-type": "application/json; charset=utf-8" } });
@@ -48,12 +49,13 @@ export default {
       if (path === "/mcp") return withLink(await handleMcp(request, env, url, EXTRA));
       if (path.startsWith("/admin/")) return handleAdmin(request, env, path);
       if (path === "/" || path === "/health.json") return withLink(J({ status: "ok", door: DOOR, page: ORIGIN + "/", tools: [...TOOLS, ...REGISTER_TOOLS].map((t) => t.name), version: env.VERSION, store: env.DB ? "bound" : "not bound", operator: "Allooloo Technologies Corp.", time: new Date().toISOString() }));
-      if (KIT[path]) return withLink(KIT[path](env));
+      if (KIT[path]) return withLink(await KIT[path](env, request));
       return withLink(notFound(path));
     }
+    if (host === NEW_APEX && API_PATHS.includes(path)) return withLink(await handleApi(request, env, url));
     if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) return new Response("Method Not Allowed", { status: 405, headers: { allow: "GET, HEAD, OPTIONS" } });
     if (path === "/mcp") return Response.redirect(DOOR, 308);
-    if (KIT[path]) return withLink(KIT[path](env));
+    if (KIT[path]) return withLink(await KIT[path](env, request));
     if (path === "/health.json") return withLink(J({ status: "ok", surface: ORIGIN, door: DOOR, version: env.VERSION, store: env.DB ? "bound" : "not bound", export: await exportStatus(env), time: new Date().toISOString() }));
     const m = /^\/receipts\/((?:rco:|rco%3[aA])[a-z2-7]{20}|dec_[0-9a-f]{8,48})$/.exec(path);
     if (m) { const r = await verifyReceipt(env, decodeURIComponent(m[1])); const body = r.structuredContent; return withLink(new Response(JSON.stringify(body, null, 1), { status: r.isError ? (body.code === "not_found" ? 404 : body.code === "store_unavailable" ? 503 : 400) : 200, headers: { "content-type": "application/json; charset=utf-8", "cache-control": r.isError ? "no-store" : "public, max-age=31536000, immutable", "access-control-allow-origin": "*" } })); }

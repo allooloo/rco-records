@@ -88,6 +88,11 @@ A pure function: recompute hash (and id for v1), check sig against kid. Referenc
 - get_statement — customer key; a signed statement of the key's slice, monthly or on demand.
 - issue_auditor_key — customer key; a read-only sub-key on the key's own slice for its auditor.
 
+## x402 (paid calls, $0.01 — prices of record at ${ORIGIN}/facts.json)
+- GET ${ORIGIN}/api — your wallet's own slice of the record; the paid call is receipted first, with caller = sha256("x402:" + your wallet). answer_hash covers the data block without the slice list (which holds this receipt).
+- GET ${ORIGIN}/api/statement?month=YYYY-MM — a signed statement of your wallet's slice.
+- Both rails on Base: x402 USDC (EIP-3009) and x402 USD — Open USD (Permit2, gas sponsored). No 402 on any MCP tool; verify_receipt and the verify URL are always free.
+
 ## RCO Register
 A customer key is issued by Allooloo to a firm and invoiced monthly. The firm's agents present it on Allooloo's doors (header RCO-Key); every receipt they cause carries caller = sha256("key:" + key id). The key reads its own slice (list_receipts), receives a signed monthly statement (get_statement), and a nightly export of the day's rows with a signed manifest into the firm's own bucket. Auditors: ${ORIGIN}/auditors
 ${extra}
@@ -95,7 +100,7 @@ ${extra}
 ${ORIGIN}/receipts/{id} — the same answer as verify_receipt, over GET.
 
 ## Machine kit
-${ORIGIN}/.well-known/agent-card.json · /.well-known/mcp.json · /.well-known/jwks.json · /.well-known/api-catalog · /.well-known/security.txt · /health.json · /robots.txt · /sitemap.xml
+${ORIGIN}/.well-known/agent-card.json · /.well-known/mcp.json · /.well-known/jwks.json · /.well-known/api-catalog · /.well-known/security.txt · /facts.json · /api (x402) · /health.json · /robots.txt · /sitemap.xml
 
 ## Errors
 Typed, in the tool result: not_authorised · invalid_receipt · invalid_id · not_found · store_unavailable · store_error · chain_contention.
