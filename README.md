@@ -9,7 +9,7 @@ Every answer the Allooloo record gives a regulated agent is receipted: one signe
 - Keyring: https://rco-records.ai/.well-known/jwks.json
 - Verify URL: `https://rco-records.ai/receipts/{id}`
 
-Operator: Allooloo Technologies Corp. — https://allooloo.ai
+Standard held by Allooloo Technologies Corp. · Open standard, MIT licence. — https://allooloo.ai
 
 ## What is in this repository
 
