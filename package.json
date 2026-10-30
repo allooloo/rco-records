@@ -1,0 +1,9 @@
+{
+  "name": "rco-door",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "description": "rco-door - RCO Records, the Record of Cleared Orders (Allooloo Technologies Corp.)",
+  "scripts": { "deploy": "wrangler deploy" },
+  "devDependencies": { "wrangler": "^4.40.0" }
+}

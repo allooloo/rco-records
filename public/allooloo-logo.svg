@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="160" viewBox="0 0 640 160" role="img" aria-label="Allooloo">
+  <rect width="640" height="160" fill="#FFFFFF"/>
+  <text x="32" y="108" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="88" font-weight="600" fill="#14213D" letter-spacing="-2">allooloo</text>
+  <rect x="32" y="128" width="576" height="4" fill="#0B6E4F"/>
+</svg>

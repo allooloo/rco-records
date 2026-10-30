@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+_office-era/
+_office-assets/
+rails/dns-*.json
+*.pre-*
+__pycache__/

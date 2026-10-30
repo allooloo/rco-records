@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RCO Records — the record of what the agent relied on</title>
+<meta name="description" content="RCO — the Record of Cleared Orders. Every read, receipted: one signed receipt per cleared read, chained, verifiable by anyone against a published key. Operated by Allooloo Technologies Corp." />
+<meta property="og:title" content="RCO Records — the record of what the agent relied on" />
+<meta property="og:description" content="RCO — the Record of Cleared Orders. Every read, receipted: one signed receipt per cleared read, chained, verifiable by anyone against a published key. Operated by Allooloo Technologies Corp." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://rco-records.ai/" />
+<meta property="og:image" content="https://rco-records.ai/icon-512.png" />
+<meta name="theme-color" content="#14213D" />
+<link rel="canonical" href="https://rco-records.ai/" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+<link rel="alternate" type="application/json" href="/.well-known/agent-card.json" title="Agent Card" />
+<link rel="stylesheet" href="/styles.css" />
+<script src="/chrome.js" defer></script>
+</head>
+<body>
+
+<header class="gh"><div class="gh-in"><a href="/" class="gh-brand" aria-label="RCO Records — home"><img src="/favicon.svg" alt="" class="brand-signet" width="28" height="28" /><span class="brand-mark">RCO Records</span></a><a class="gh-entity" href="https://allooloo.ai/" rel="noopener">Allooloo Technologies Corp.</a><nav class="gh-nav" aria-label="Primary"><a href="/#what">What RCO is</a><a href="/#spec">Receipt v1</a><a href="/#verify">Verify</a></nav><div class="gh-act"><button class="gh-theme" id="gh-theme" type="button" aria-label="Light or dark" aria-pressed="false"><svg class="gi i-moon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg><svg class="gi i-sun" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg></button><a class="g-btn g-btn-p gh-pill" href="https://mcp.rco-records.ai/mcp">Door →</a></div></div></header>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">ALLOOLOO  ·  RECORD OF CLEARED ORDERS  ·  AS OF {{as_of}}</div>
+    <h1 class="hero-h1">RCO — the record of what the agent relied on.</h1>
+    <p class="hero-p">Every read, receipted. Every answer the Allooloo record gives a regulated agent is receipted: one signed receipt per cleared read, chained to the one before, verifiable by anyone against a published key. The receipt is the agent's alibi.</p>
+  </div>
+</header>
+<main id="main">
+<section id="what" class="section section-dark">
+  <div class="sec-inner">
+    <div class="sec-eyebrow">§1 WHAT RCO IS</div>
+    <h2 class="sec-h2">One receipt per cleared read</h2>
+    <div class="sec-prose"><p>RCO — the Record of Cleared Orders — is the record of what an AI agent relied on. When an Allooloo gate clears a read, it writes one receipt to this chain: what was read, in which market, under which rule version, when, and the hash of the answer the agent received. The receipt is signed by Allooloo and chained to the one before it.</p></div>
+    <ul class="line-list"><li>Door: <a href="https://mcp.rco-records.ai/mcp">https://mcp.rco-records.ai/mcp</a> — Model Context Protocol (MCP), streamable HTTP, stateless, JSON-RPC 2.0, typed errors.</li><li><code>write_receipt</code> — called by the clearing gate; one bearer token per writer; returns the receipt.</li><li><code>verify_receipt</code> — public; by id; returns the receipt and the verification result.</li><li>Operator: Allooloo Technologies Corp.. One writer: Allooloo's gates.</li></ul>
+  </div>
+</section>
+<section id="spec" class="section">
+  <div class="sec-inner">
+    <div class="sec-eyebrow">§2 RECEIPT V1 — THE FROZEN SPEC</div>
+    <h2 class="sec-h2">Canonical JSON, keys sorted, UTF-8, no whitespace</h2>
+    <div class="sec-prose"><p>One receipt per cleared read; writes are idempotent on (<code>writer</code>, <code>subject</code>, <code>subject_type</code>, <code>market</code>, <code>rule_version</code>, <code>cleared_at</code>, <code>answer_hash</code>). Target size under 600 bytes. Fields are only ever added, never renamed or removed; unknown fields are ignored by readers.</p></div>
+    <div class="table-wrap"><table class="rec-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>v</code></td><td>1</td></tr><tr><td><code>id</code></td><td><code>rco:</code> + 20-char base32 of the first 100 bits of <code>hash</code>. Derived, never assigned.</td></tr><tr><td><code>seq</code></td><td>Monotonic integer across the whole chain.</td></tr><tr><td><code>writer</code></td><td>The gate that wrote it (<code>allooloo</code>).</td></tr><tr><td><code>caller</code></td><td>Who asked: a customer key id, or an x402 wallet handle. Stored as sha256 of the value. Empty when unknown.</td></tr><tr><td><code>subject</code></td><td>What was read: the identifier (ISIN, LEI, …).</td></tr><tr><td><code>subject_type</code></td><td><code>isin</code> | <code>lei</code> | <code>gtin</code> | … — open list. Replaces the v0 <code>gtin</code> field.</td></tr><tr><td><code>market</code></td><td>ISO country or exchange code of the read.</td></tr><tr><td><code>rule_version</code></td><td>Version of the rule set the gate cleared under.</td></tr><tr><td><code>cleared_at</code></td><td>RFC 3339 UTC, seconds.</td></tr><tr><td><code>answer_hash</code></td><td>sha256 of the canonical answer bytes the agent received.</td></tr><tr><td><code>prev_hash</code></td><td>hash of the previous receipt (seq − 1).</td></tr><tr><td><code>hash</code></td><td>sha256 over the canonical receipt without <code>hash</code>, <code>sig</code> (and <code>id</code>, which is derived from it).</td></tr><tr><td><code>sig</code></td><td>Ed25519 over <code>hash</code>, by <code>kid</code>.</td></tr><tr><td><code>kid</code></td><td>Key id, resolvable at <a href="/.well-known/jwks.json">/.well-known/jwks.json</a>.</td></tr></tbody></table></div>
+  </div>
+</section>
+<section id="verify" class="section section-dark">
+  <div class="sec-inner">
+    <div class="sec-eyebrow">§3 VERIFY</div>
+    <h2 class="sec-h2">verify(receipt, jwks) is a pure function</h2>
+    <div class="sec-prose"><p>Recompute <code>id</code> and <code>hash</code>, check <code>sig</code> against <code>kid</code>. A receipt verifies forever without asking Allooloo anything. Reference implementations in TypeScript, Python and Go, and the spec, under the MIT licence: <a href="https://github.com/allooloo/rco-records">github.com/allooloo/rco-records</a>.</p></div>
+    <ul class="line-list"><li><code>https://rco-records.ai/receipts/{id}</code> — the same answer as <code>verify_receipt</code>, over GET, for any client.</li><li>Keyring: <a href="/.well-known/jwks.json">/.well-known/jwks.json</a> — <code>rco-allooloo-2026-10</code> (signing), and the two historical keys the v0 receipts name.</li></ul>
+  </div>
+</section>
+<section id="history" class="section">
+  <div class="sec-inner">
+    <div class="sec-eyebrow">§4 HISTORY (V0)</div>
+    <h2 class="sec-h2">The receipts before 2026-10-29 keep their bytes</h2>
+    <div class="sec-prose"><p>Receipts written before 2026-10-29 are version 0: <code>{decision_id, gtin, market, actor_class, rule_version, cleared_at, writer, prev_hash, hash, sig, kid}</code>, hash over the canonical JSON of <code>{actor_class, cleared_at, decision_id, gtin, market, prev_hash, rule_version, writer}</code>. Their bytes and field names are kept forever — the chain hashes over them. Version 1 starts at the first receipt written under Allooloo's key, chained to the last v0 hash: one chain.</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-bottom">
+    <span class="entity-line entity-line-footer">© 2026 <a href="https://allooloo.ai/" rel="noopener">Allooloo Technologies Corp.</a></span>
+    <span class="footer-sep">·</span>
+    <span>Surface {{version}} · as of {{as_of}}</span>
+    <span class="footer-sep">·</span>
+    <a href="https://mcp.rco-records.ai/mcp">Door</a>
+    <span class="footer-sep">·</span>
+    <a href="/.well-known/agent-card.json">Agent Card</a>
+    <span class="footer-sep">·</span>
+    <a href="/.well-known/jwks.json">Keyring</a>
+    <span class="footer-sep">·</span>
+    <a href="/llms.txt">llms.txt</a>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/allooloo/rco-records">Spec + verify (MIT)</a>
+    <span class="footer-sep">·</span>
+    <a href="/status">Status</a>
+    <span class="footer-sep">·</span>
+    <a href="/terms">Terms of Use</a>
+    <span class="footer-sep">·</span>
+    <a href="/privacy">Privacy</a>
+    <span class="footer-sep">·</span>
+    <a href="/security">Report a Security Issue</a>
+    <span class="footer-sep">·</span>
+    <a href="/no-cookies">No cookies</a>
+  </div>
+</footer>
+
+</body>
+</html>

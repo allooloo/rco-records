@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#14213D"/>
+  <!-- a record: three field lines, the last one confirmed -->
+  <rect x="14" y="18" width="36" height="6" rx="3" fill="#FFFFFF"/>
+  <rect x="14" y="29" width="28" height="6" rx="3" fill="#FFFFFF" opacity="0.7"/>
+  <rect x="14" y="40" width="20" height="6" rx="3" fill="#0B6E4F"/>
+  <circle cx="46" cy="43" r="5" fill="#0B6E4F"/>
+</svg>
