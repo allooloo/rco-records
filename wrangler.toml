@@ -17,7 +17,7 @@ routes = [
 crons = ["30 5 * * *"]   # nightly export of the full table (UTC); puts only when EXPORT_KEY_ID / EXPORT_SECRET are placed (the CEO's hand)
 
 [vars]
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 AS_OF = "2026-10-30"
 KID = "rco-allooloo-2026-10"
 EXPORT_BUCKET = "rco-receipts-copy"

@@ -1,6 +1,6 @@
 {
   "name": "rco-door",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "description": "rco-door - RCO Records, the Record of Cleared Orders (Allooloo Technologies Corp.)",

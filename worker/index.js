@@ -6,10 +6,12 @@ import { handleMcp, verifyReceipt } from "./mcp.js";
 import { JWKS, LINK, ORIGIN, DOOR, agentCard, mcpCard, apiCatalog, llms, robots, securityTxt, sitemap, PAGE_PATHS } from "./kit.js";
 import { TOOLS } from "./mcp.js";
 import { runExport, exportStatus } from "./export.js";
+import { REGISTER_TOOLS, registerCall, handleAdmin, exportKeys } from "./register.js";
+const EXTRA = { tools: REGISTER_TOOLS, call: registerCall };   // RCO-03: the Register
 
 const NEW_APEX = "rco-records.ai", NEW_DOOR = "mcp.rco-records.ai", OLD_APEX = "rco-a2a.ai", OLD_DOOR = "mcp.rco-a2a.ai";
-const PAGES = { "/": "/index.html", "/status": "/status.html", "/terms": "/terms.html", "/privacy": "/privacy.html", "/security": "/security.html", "/no-cookies": "/no-cookies.html" };
-const KIT = { "/.well-known/agent-card.json": (env) => J(agentCard(env.VERSION)), "/.well-known/mcp.json": (env) => J(mcpCard(env.VERSION, TOOLS)), "/.well-known/mcp/server-card.json": (env) => J(mcpCard(env.VERSION, TOOLS)),
+const PAGES = { "/": "/index.html", "/auditors": "/auditors.html", "/status": "/status.html", "/terms": "/terms.html", "/privacy": "/privacy.html", "/security": "/security.html", "/no-cookies": "/no-cookies.html" };
+const KIT = { "/.well-known/agent-card.json": (env) => J(agentCard(env.VERSION)), "/.well-known/mcp.json": (env) => J(mcpCard(env.VERSION, [...TOOLS, ...REGISTER_TOOLS])), "/.well-known/mcp/server-card.json": (env) => J(mcpCard(env.VERSION, [...TOOLS, ...REGISTER_TOOLS])),
   "/.well-known/jwks.json": () => J(JWKS, "public, max-age=3600"), "/.well-known/api-catalog": () => J(apiCatalog(), "public, max-age=3600", "application/linkset+json"),
   "/.well-known/security.txt": () => T(securityTxt()), "/llms.txt": (env) => T(llms(env.VERSION)), "/robots.txt": () => T(robots()), "/sitemap.xml": () => T(sitemap(PAGE_PATHS), "application/xml; charset=utf-8") };
 const J = (o, cache = "no-store", ct = "application/json; charset=utf-8") => new Response(JSON.stringify(o, null, 1), { status: 200, headers: { "content-type": ct, "cache-control": cache, "access-control-allow-origin": "*" } });
@@ -36,15 +38,16 @@ const withLink = (res) => { const h = new Headers(res.headers); h.set("link", LI
 const moved = (host, url) => new Response(null, { status: 301, headers: { location: `https://${host}${url.pathname}${url.search}`, "cache-control": "public, max-age=86400" } });
 
 export default {
-  async scheduled(event, env, ctx) { ctx.waitUntil(runExport(env, new Date().toISOString().slice(0, 10))); },
+  async scheduled(event, env, ctx) { ctx.waitUntil(runExport(env, new Date().toISOString().slice(0, 10))); ctx.waitUntil(exportKeys(env, new Date(Date.now() - 864e5).toISOString().slice(0, 10))); },
   async fetch(request, env) {
     const url = new URL(request.url), host = url.hostname, path = url.pathname.replace(/\/+$/, "") || "/";
     // the old names: permanent 301s; the old MCP door keeps answering POST (and its CORS preflight) as an alias for six months
-    if (host === OLD_DOOR) { if (path === "/mcp" && (request.method === "POST" || request.method === "OPTIONS")) return withLink(await handleMcp(request, env, new URL(DOOR))); return moved(NEW_DOOR, url); }
+    if (host === OLD_DOOR) { if (path === "/mcp" && (request.method === "POST" || request.method === "OPTIONS")) return withLink(await handleMcp(request, env, new URL(DOOR), EXTRA)); return moved(NEW_DOOR, url); }
     if (host === OLD_APEX) return moved(NEW_APEX, url);
     if (host === NEW_DOOR) {
-      if (path === "/mcp") return withLink(await handleMcp(request, env, url));
-      if (path === "/" || path === "/health.json") return withLink(J({ status: "ok", door: DOOR, page: ORIGIN + "/", tools: TOOLS.map((t) => t.name), version: env.VERSION, store: env.DB ? "bound" : "not bound", operator: "Allooloo Technologies Corp.", time: new Date().toISOString() }));
+      if (path === "/mcp") return withLink(await handleMcp(request, env, url, EXTRA));
+      if (path.startsWith("/admin/")) return handleAdmin(request, env, path);
+      if (path === "/" || path === "/health.json") return withLink(J({ status: "ok", door: DOOR, page: ORIGIN + "/", tools: [...TOOLS, ...REGISTER_TOOLS].map((t) => t.name), version: env.VERSION, store: env.DB ? "bound" : "not bound", operator: "Allooloo Technologies Corp.", time: new Date().toISOString() }));
       if (KIT[path]) return withLink(KIT[path](env));
       return withLink(notFound(path));
     }

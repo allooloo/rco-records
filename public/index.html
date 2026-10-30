@@ -23,7 +23,7 @@
 </head>
 <body>
 
-<header class="gh"><div class="gh-in"><a href="/" class="gh-brand" aria-label="RCO Records — home"><img src="/favicon.svg" alt="" class="brand-signet" width="28" height="28" /><span class="brand-mark">RCO Records</span></a><a class="gh-entity" href="https://allooloo.ai/" rel="noopener">Allooloo Technologies Corp.</a><nav class="gh-nav" aria-label="Primary"><a href="/#what">What RCO is</a><a href="/#spec">Receipt v1</a><a href="/#verify">Verify</a></nav><div class="gh-act"><button class="gh-theme" id="gh-theme" type="button" aria-label="Light or dark" aria-pressed="false"><svg class="gi i-moon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg><svg class="gi i-sun" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg></button><a class="g-btn g-btn-p gh-pill" href="https://mcp.rco-records.ai/mcp">Door →</a></div></div></header>
+<header class="gh"><div class="gh-in"><a href="/" class="gh-brand" aria-label="RCO Records — home"><img src="/favicon.svg" alt="" class="brand-signet" width="28" height="28" /><span class="brand-mark">RCO Records</span></a><a class="gh-entity" href="https://allooloo.ai/" rel="noopener">Allooloo Technologies Corp.</a><nav class="gh-nav" aria-label="Primary"><a href="/#what">What RCO is</a><a href="/#spec">Receipt v1</a><a href="/#verify">Verify</a><a href="/auditors">Auditors</a></nav><div class="gh-act"><button class="gh-theme" id="gh-theme" type="button" aria-label="Light or dark" aria-pressed="false"><svg class="gi i-moon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg><svg class="gi i-sun" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg></button><a class="g-btn g-btn-p gh-pill" href="https://mcp.rco-records.ai/mcp">Door →</a></div></div></header>
 <header class="hero">
   <div class="hero-inner">
     <div class="hero-eyebrow">ALLOOLOO  ·  RECORD OF CLEARED ORDERS  ·  AS OF {{as_of}}</div>
@@ -53,7 +53,7 @@
     <div class="sec-eyebrow">§3 VERIFY</div>
     <h2 class="sec-h2">verify(receipt, jwks) is a pure function</h2>
     <div class="sec-prose"><p>Recompute <code>id</code> and <code>hash</code>, check <code>sig</code> against <code>kid</code>. A receipt verifies forever without asking Allooloo anything. Reference implementations in TypeScript, Python and Go, and the spec, under the MIT licence: <a href="https://github.com/allooloo/rco-records">github.com/allooloo/rco-records</a>.</p></div>
-    <ul class="line-list"><li><code>https://rco-records.ai/receipts/{id}</code> — the same answer as <code>verify_receipt</code>, over GET, for any client.</li><li>Keyring: <a href="/.well-known/jwks.json">/.well-known/jwks.json</a> — <code>rco-allooloo-2026-10</code> (signing), and the two historical keys the v0 receipts name.</li></ul>
+    <ul class="line-list"><li><code>https://rco-records.ai/receipts/{id}</code> — the same answer as <code>verify_receipt</code>, over GET, for any client.</li><li>Keyring: <a href="/.well-known/jwks.json">/.well-known/jwks.json</a> — <code>rco-allooloo-2026-10</code> (signing), and the two historical keys the v0 receipts name.</li><li>Auditors: <a href="/auditors">how to verify, where the chain tip is, what a statement looks like</a>.</li></ul>
   </div>
 </section>
 <section id="history" class="section">
@@ -81,6 +81,8 @@
     <a href="/llms.txt">llms.txt</a>
     <span class="footer-sep">·</span>
     <a href="https://github.com/allooloo/rco-records">Spec + verify (MIT)</a>
+    <span class="footer-sep">·</span>
+    <a href="/auditors">Auditors</a>
     <span class="footer-sep">·</span>
     <a href="/status">Status</a>
     <span class="footer-sep">·</span>

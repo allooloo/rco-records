@@ -25,6 +25,9 @@ export const LINK = [
 export const SKILLS = [
   { id: "write_receipt", name: "write_receipt", description: "Write one chained, signed v1 receipt for a cleared read (bearer token per writer); returns the receipt.", tags: ["receipt", "write", "authenticated"] },
   { id: "verify_receipt", name: "verify_receipt", description: "Return one receipt by id (rco:… or a v0 dec_…) with the verification result and the key that checks it. Public.", tags: ["receipt", "verify", "public"] },
+  { id: "list_receipts", name: "list_receipts", description: "A customer key's own receipts, by seq or date range (RCO Register).", tags: ["register", "customer-key"] },
+  { id: "get_statement", name: "get_statement", description: "A signed monthly or on-demand statement of a customer key's slice (RCO Register).", tags: ["register", "statement", "customer-key"] },
+  { id: "issue_auditor_key", name: "issue_auditor_key", description: "A read-only auditor sub-key on a customer key's own slice.", tags: ["register", "auditor"] },
 ];
 
 export const agentCard = (version, skills = SKILLS) => ({
@@ -32,7 +35,7 @@ export const agentCard = (version, skills = SKILLS) => ({
   description: DEFINITION, url: DOOR, version, documentationUrl: `${ORIGIN}/llms.txt`, iconUrl: `${ORIGIN}/icon-512.png`,
   provider: { organization: OPERATOR, url: OPERATOR_URL }, contact: `mailto:${CONTACT}`,
   capabilities: { streaming: false, pushNotifications: false, stateTransitionHistory: false },
-  securitySchemes: { none: { type: "noAuth", description: "verify_receipt needs no authentication" }, writer: { type: "httpAuth", scheme: "bearer", description: "write_receipt: one bearer token per writer, issued by Allooloo" } },
+  securitySchemes: { none: { type: "noAuth", description: "verify_receipt needs no authentication" }, writer: { type: "httpAuth", scheme: "bearer", description: "write_receipt: one bearer token per writer, issued by Allooloo" }, customer: { type: "httpAuth", scheme: "bearer", description: "list_receipts, get_statement, issue_auditor_key: a customer key issued by Allooloo (RCO Register)" } },
   defaultInputModes: ["application/json"], defaultOutputModes: ["application/json"],
   skills: skills.map((s) => ({ ...s, inputModes: ["application/json"], outputModes: ["application/json"] })),
   supportedInterfaces: [{ url: DOOR, protocolBinding: "MCP", protocolVersion: "2025-06-18", transport: "streamable-http" }],
@@ -42,7 +45,7 @@ export const agentCard = (version, skills = SKILLS) => ({
 export const mcpCard = (version, tools) => ({
   serverInfo: { name: "rco-records", title: "RCO Records — Record of Cleared Orders", version }, transport: { type: "streamable-http", endpoint: DOOR }, capabilities: { tools: {} },
   tools: tools.map((t) => ({ name: t.name, description: t.description, annotations: t.annotations })),
-  authentication: { verify_receipt: "none", write_receipt: "Authorization: Bearer <writer token>" },
+  authentication: { verify_receipt: "none", write_receipt: "Authorization: Bearer <writer token>", list_receipts: "Authorization: Bearer <customer key>", get_statement: "Authorization: Bearer <customer key>", issue_auditor_key: "Authorization: Bearer <customer key>" },
   operator: OPERATOR, surface: ORIGIN, agent_card: `${ORIGIN}/.well-known/agent-card.json`, keyring: `${ORIGIN}/.well-known/jwks.json`, verify: `${ORIGIN}/receipts/{id}`, spec: `${ORIGIN}/#spec`,
 });
 
@@ -81,6 +84,12 @@ A pure function: recompute hash (and id for v1), check sig against kid. Referenc
 ## Tools (MCP, streamable HTTP, stateless)
 - write_receipt — Authorization: Bearer <writer token>; returns the receipt.
 - verify_receipt — public; argument id (rco:… or dec_…); returns the receipt and the verification result.
+- list_receipts — customer key (Authorization: Bearer rcok_…); own rows only, by seq or date range.
+- get_statement — customer key; a signed statement of the key's slice, monthly or on demand.
+- issue_auditor_key — customer key; a read-only sub-key on the key's own slice for its auditor.
+
+## RCO Register
+A customer key is issued by Allooloo to a firm and invoiced monthly. The firm's agents present it on Allooloo's doors (header RCO-Key); every receipt they cause carries caller = sha256("key:" + key id). The key reads its own slice (list_receipts), receives a signed monthly statement (get_statement), and a nightly export of the day's rows with a signed manifest into the firm's own bucket. Auditors: ${ORIGIN}/auditors
 ${extra}
 ## Verify URL
 ${ORIGIN}/receipts/{id} — the same answer as verify_receipt, over GET.
@@ -114,7 +123,7 @@ Preferred-Languages: en
 Policy: ${ORIGIN}/security
 `;
 
-export const PAGE_PATHS = ["/", "/status", "/terms", "/privacy", "/security", "/no-cookies"];
+export const PAGE_PATHS = ["/", "/auditors", "/status", "/terms", "/privacy", "/security", "/no-cookies"];
 export const sitemap = (paths = PAGE_PATHS) => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${[...paths, "/llms.txt"].map((p) => `  <url><loc>${ORIGIN}${p}</loc></url>`).join("\n")}

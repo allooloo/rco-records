@@ -5,6 +5,7 @@
 // Typed errors ride in the tool result as { code, message } with isError: true. Nothing is answered from memory.
 import { hashOf, idOf, sign, sha256hex, second, unb64u, PUBLIC } from "./chain.js";
 import { JWKS, ORIGIN, DEFINITION } from "./kit.js";
+import { keyFromValue } from "./register.js";
 
 export const SERVER = { name: "rco-records", title: "RCO Records — Record of Cleared Orders", protocolVersion: "2025-06-18" };
 export const TOOLS = [
@@ -20,7 +21,8 @@ export const TOOLS = [
         rule_version: { type: "string", description: "the rule set and version the gate cleared under" },
         cleared_at: { type: "string", description: "RFC 3339 UTC; stored to the second; the door's clock when absent" },
         answer_hash: { type: "string", description: "sha256:<hex> of the canonical answer bytes the agent received" },
-        caller: { type: "string", description: "who asked: a customer key id or an x402 wallet handle; stored only as its sha256" },
+        caller: { type: "string", description: "who asked, when the gate knows it: x402:<wallet address>; stored only as its sha256" },
+        caller_key: { type: "string", description: "the customer key the reader presented to the gate (RCO-Key); the door checks it and stores sha256(\"key:\" + key id) as caller" },
       },
       required: ["subject", "subject_type", "rule_version"],
     },
@@ -140,7 +142,8 @@ export async function handleMcp(request, env, url, extra = { tools: [], call: as
         if (name === "verify_receipt") out.push(rpc(id, await verifyReceipt(env, args.id || args.decision_id)));
         else if (name === "write_receipt") {
           const w = await writerOf(request, env);
-          out.push(rpc(id, w ? await writeReceipt(env, w, args) : typed("not_authorised", "write_receipt needs Authorization: Bearer <writer token> issued by Allooloo")));
+          let ch; if (w && args.caller_key) { const k = await keyFromValue(env, args.caller_key); ch = k ? k.caller : ""; }
+          out.push(rpc(id, w ? await writeReceipt(env, w, args, ch) : typed("not_authorised", "write_receipt needs Authorization: Bearer <writer token> issued by Allooloo")));
         } else {
           const r = await extra.call(name, args, request, env);
           out.push(r === undefined ? rpcErr(id, -32602, `unknown tool: ${name}`, { tools: tools.map((t) => t.name) }) : rpc(id, r));

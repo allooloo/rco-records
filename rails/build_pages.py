@@ -6,7 +6,7 @@ PUB = os.path.join(ROOT, 'public')
 ORIGIN, DOOR = 'https://rco-records.ai', 'https://mcp.rco-records.ai/mcp'
 REPO = 'https://github.com/allooloo/rco-records'
 OP, OP_URL, CONTACT = 'Allooloo Technologies Corp.', 'https://allooloo.ai', 'developers@allooloo.ai'
-AUD = os.environ.get('AUDITORS') == '1'   # RCO-03 adds the auditors page; until then nothing links to it
+AUD = True   # RCO-03 (2026-10-30): the auditors page is live
 NAV = [('/#what', 'What RCO is'), ('/#spec', 'Receipt v1'), ('/#verify', 'Verify')] + ([('/auditors', 'Auditors')] if AUD else [])
 FOOT = [(DOOR, 'Door'), ('/.well-known/agent-card.json', 'Agent Card'), ('/.well-known/jwks.json', 'Keyring'), ('/llms.txt', 'llms.txt'), (REPO, 'Spec + verify (MIT)'),
         *([('/auditors', 'Auditors')] if AUD else []), ('/status', 'Status'), ('/terms', 'Terms of Use'), ('/privacy', 'Privacy'), ('/security', 'Report a Security Issue'), ('/no-cookies', 'No cookies')]
@@ -124,7 +124,22 @@ def plain(path, title, eyebrow, items, desc):
     body = sec('page', eyebrow, title, '\n'.join(items), dark=True)
     return shell(path, f'{title} — RCO Records', desc, body)
 
+def auditors():
+    body = sec('page', 'AUDITORS', 'Verifying an RCO record', '\n'.join([
+        P('There is no auditor door. An auditor needs four things, none of which asks Allooloo for anything: the MIT <code>verify()</code>, the published key, the daily chain tip (RCO Anchor), and the firm\'s own export and statement.'),
+        UL([f'<strong>verify()</strong> — TypeScript, Python and Go reference implementations under MIT: <a href="{REPO}">{REPO.replace("https://", "")}</a>. Recompute <code>hash</code> and <code>id</code>, check <code>sig</code> against <code>kid</code>. A pure function.',
+            '<strong>The key</strong> — <a href="/.well-known/jwks.json">/.well-known/jwks.json</a>. Signing kid <code>rco-allooloo-2026-10</code>; the historical kids stay so every earlier receipt still verifies.',
+            '<strong>The chain tip</strong> — RCO Anchor publishes the day\'s tip (seq, hash, time, signature) off Allooloo\'s infrastructure after each nightly chain check. Walk the firm\'s receipts forward from a verified receipt to a published tip: every <code>prev_hash</code> is the hash before it.',
+            '<strong>The firm\'s export</strong> — each night, the day\'s receipts for the firm\'s customer key land in the firm\'s own bucket as JSON Lines, with a manifest signed by Allooloo: key id, day, first seq, last seq, day tip, the sha256 of the file. The firm holds it; Allooloo cannot change it after the fact.',
+            '<strong>The statement</strong> — monthly, and on demand: the period, the count, first and last seq, a digest over the slice\'s receipt hashes in seq order, the chain tip at issue, signed by Allooloo. Recompute the digest from the export and check the signature with <code>verify()</code>\'s key.',
+            '<strong>Read access</strong> — a firm can issue its auditor a read-only sub-key on its own slice (<code>issue_auditor_key</code>); the sub-key can list the slice and pull statements, nothing else.']),
+        P('What a statement looks like:'),
+        '    <div class="sec-prose"><pre><code>{ "type": "rco-statement", "v": 1, "issuer": "Allooloo Technologies Corp.", "key_id": "k…", "caller": "sha256:…",\n  "period": { "from": "2026-10-01", "to": "2026-11-01" },\n  "receipts": { "count": …, "first_seq": …, "last_seq": …, "first_id": "rco:…", "last_id": "rco:…", "slice_digest": "sha256:…" },\n  "chain_tip_at_issue": { "seq": …, "hash": "sha256:…" }, "issued_at": "…", "kid": "rco-allooloo-2026-10",\n  "id": "rcs:…", "hash": "sha256:…", "sig": "…" }</code></pre></div>',
+        P('The statement\'s <code>hash</code> is sha256 over its canonical JSON without <code>id</code>, <code>hash</code> and <code>sig</code>; <code>sig</code> is Ed25519 over the hash string — the same rule as a receipt.')]), dark=True)
+    return shell('/auditors', 'Auditors — RCO Records', 'How an auditor verifies RCO receipts: the MIT verify(), the published key, the daily chain tip, and the firm\'s own export and statement. A page, not a door.', body)
+
 PAGES = {
+    'auditors.html': auditors,
     'index.html': index,
     'status.html': lambda: plain('/status', 'Status', 'STATUS', [
         P('The door and its kit. Surface version {{version}} · as of {{as_of}}. Live reads: <a href="/health.json">/health.json</a> (the surface, the store binding, the export job) and <a href="https://mcp.rco-records.ai/health.json">mcp.rco-records.ai/health.json</a> (the door).'),
