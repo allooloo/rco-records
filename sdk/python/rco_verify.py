@@ -25,6 +25,15 @@ def id_of(hash_: str) -> str:
     return "rco:" + base64.b32encode(digest[:13]).decode("ascii").lower()[:20]
 
 
+def dec_of(hash_: str) -> str:   # RCO-03: the gsc-hubs chain's id rule — dec_ + the first 24 hex of the hash
+    return "dec_" + hash_.split(":", 1)[1][:24]
+
+
+def id_ok(receipt: dict) -> bool:
+    rid = receipt.get("id") or ""
+    return (dec_of(receipt["hash"]) if rid.startswith("dec_") else id_of(receipt["hash"])) == rid
+
+
 def _b64u(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
@@ -48,7 +57,7 @@ def sig_ok(receipt: dict, jwks: dict):
 def verify(receipt: dict, jwks: dict) -> dict:
     recomputed = hash_of(receipt)
     out = {"version": 1 if receipt.get("v") == 1 else 0, "hash_ok": recomputed == receipt.get("hash"), "recomputed": recomputed,
-           "id_ok": (id_of(receipt["hash"]) == receipt.get("id")) if receipt.get("v") == 1 else None, "sig_ok": sig_ok(receipt, jwks)}
+           "id_ok": id_ok(receipt) if receipt.get("v") == 1 else None, "sig_ok": sig_ok(receipt, jwks)}
     out["valid"] = out["hash_ok"] and out["id_ok"] is not False and out["sig_ok"] is not False
     return out
 

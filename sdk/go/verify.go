@@ -121,7 +121,11 @@ func Verify(r Receipt, jwks JWKS) Result {
 	res.HashOK = res.Recomputed == r.str("hash")
 	if r.isV1() {
 		res.Version = 1
-		ok := IDOf(r.str("hash")) == r.str("id")
+		want := IDOf(r.str("hash"))
+		if strings.HasPrefix(r.str("id"), "dec_") { // RCO-03: the gsc-hubs chain's id rule
+			want = "dec_" + strings.TrimPrefix(r.str("hash"), "sha256:")[:24]
+		}
+		ok := want == r.str("id")
 		res.IDOK = &ok
 	}
 	res.SigOK = SigOK(r, jwks)

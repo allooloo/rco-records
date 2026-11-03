@@ -37,7 +37,7 @@ export async function sigOk(r: Receipt, jwks: Jwks): Promise<boolean | null> {
 export async function verify(r: Receipt, jwks: Jwks) {
   const recomputed = await hashOf(r);
   const hash_ok = recomputed === r.hash;
-  const id_ok = r.v === 1 ? idOf(r.hash) === r.id : null;
+  const id_ok = r.v === 1 ? (String(r.id || "").startsWith("dec_") ? "dec_" + String(r.hash).replace(/^sha256:/, "").slice(0, 24) : idOf(r.hash)) === r.id : null;   // RCO-03: dec_ ids on the gsc-hubs chain
   const sig_ok = await sigOk(r, jwks);
   return { version: r.v === 1 ? 1 : 0, valid: hash_ok && id_ok !== false && sig_ok !== false, hash_ok, id_ok, sig_ok, recomputed };
 }
