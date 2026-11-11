@@ -1,3 +1,4 @@
+import { runExport } from "./export.js";   // ALLOOLOO-FIX 2026-11-03
 // register.js — RCO-03 (Allooloo build memo v1.0 §4.2, §4.3, §6): the RCO Register. A customer key is issued by Allooloo to a firm (admin route),
 // the firm's reads carry it through Allooloo's gates (header RCO-Key), the door stamps every such receipt with caller = sha256("key:" + key id),
 // and the key reads its own slice: list_receipts (own rows only), get_statement (signed, monthly and on demand), nightly export to the firm's bucket.
@@ -26,6 +27,9 @@ export async function keyFromValue(env, value) {
   return row;
 }
 const bearerKey = async (request, env) => { const m = /^Bearer\s+(rcok_\S+)$/i.exec(request.headers.get("authorization") || ""); return m ? keyFromValue(env, m[1]) : null; };
+// RCO-KEY-FO (2026-11-04): a key scoped write_receipt (keys.scope) writes only — it cannot list, take statements or issue keys
+const readKey = async (request, env) => { const k = await bearerKey(request, env); return k && k.scope === "write_receipt" ? { scoped: true } : k; };
+const SCOPED = (tool) => typed("scope_refused", `this key is scoped write_receipt only; ${tool} is not in its scope`, { scope: "write_receipt" });
 
 async function issueKey(env, { name, kind = "customer", parent = null }) {
   const key_id = "k" + hexRand(5);
@@ -51,9 +55,10 @@ async function slice(env, caller, a) {
 }
 
 async function listReceipts(request, env, a) {
-  const k = await bearerKey(request, env);
+  const k = await readKey(request, env);
+  if (k && k.scoped) return SCOPED("list_receipts");
   if (!k) return typed("not_authorised", "list_receipts needs Authorization: Bearer <customer key> issued by Allooloo; it returns the key's own rows only");
-  return ok({ key_id: k.key_id, kind: k.kind, caller: k.caller, ...(await slice(env, k.caller, a || {})) });
+  return ok({ key_id: k.key_id, kind: k.kind, caller: k.caller, chain: k.chain || "cm", scope: "Receipts are written per customer key and per subject type; no cross-reading.", ...(await slice(env, k.caller, a || {})) });   // RCO-03
 }
 
 // ---- statements ------------------------------------------------------------------------------------------------------------------------------
@@ -67,8 +72,9 @@ export async function makeStatement(env, k, period) {
     for (const r of results) { if (!first) first = r; last = r; hashes.push(r.hash); }
     after = results[results.length - 1].seq;
   }
-  const tip = await env.DB.prepare("SELECT seq, hash FROM receipts ORDER BY seq DESC LIMIT 1").first();
-  const body = { type: "rco-statement", v: 1, issuer: "Allooloo Technologies Corp.", key_id: k.parent || k.key_id, caller: k.caller, period: { from, to, basis: "cleared_at UTC, from inclusive, to exclusive" },
+  const ch = k.chain || (k.parent ? ((await env.DB.prepare("SELECT chain FROM keys WHERE key_id = ?1").bind(k.parent).first()) || {}).chain : null) || "cm";   // RCO-03: the key's chain
+  const tip = ch === "cm" ? await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain IS NULL OR chain = 'cm' ORDER BY seq DESC LIMIT 1").first() : (await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain = ?1 ORDER BY seq DESC LIMIT 1").bind(ch).first()) || { seq: null, hash: ((await env.DB.prepare("SELECT genesis FROM chains WHERE chain = ?1").bind(ch).first()) || {}).genesis || null };
+  const body = { type: "rco-statement", v: 1, issuer: "Allooloo Technologies Corp.", key_id: k.parent || k.key_id, caller: k.caller, chain: ch, scope: "Receipts are written per customer key and per subject type; no cross-reading.", period: { from, to, basis: "cleared_at UTC, from inclusive, to exclusive" },
     receipts: { count: hashes.length, first_seq: first ? first.seq : null, last_seq: last ? last.seq : null, first_id: first ? first.id || first.decision_id : null, last_id: last ? last.id || last.decision_id : null,
       slice_digest: "sha256:" + (await sha256hex(hashes.join("\n"))), digest_rule: "sha256 over the receipt hashes of the slice, seq order, joined by \\n" },
     chain_tip_at_issue: { seq: tip.seq, hash: tip.hash }, issued_at: now(), kid: env.KID, verify: `${ORIGIN}/auditors` };
@@ -78,7 +84,8 @@ export async function makeStatement(env, k, period) {
   return st;
 }
 async function getStatement(request, env, a) {
-  const k = await bearerKey(request, env);
+  const k = await readKey(request, env);
+  if (k && k.scoped) return SCOPED("get_statement");
   if (!k) return typed("not_authorised", "get_statement needs Authorization: Bearer <customer key> issued by Allooloo");
   let p;
   if (a && a.month) { if (!/^\d{4}-\d{2}$/.test(a.month)) return typed("invalid_period", "month must be YYYY-MM"); p = monthRange(a.month); }
@@ -87,7 +94,8 @@ async function getStatement(request, env, a) {
   return ok({ statement: await makeStatement(env, k, p) });
 }
 async function issueAuditorKey(request, env, a) {
-  const k = await bearerKey(request, env);
+  const k = await readKey(request, env);
+  if (k && k.scoped) return SCOPED("issue_auditor_key");
   if (!k || k.kind === "auditor") return typed("not_authorised", "issue_auditor_key needs Authorization: Bearer <customer key> (an auditor key cannot issue keys)");
   const r = await issueKey(env, { name: String((a && a.name) || "auditor").slice(0, 80) + " (auditor of " + k.key_id + ")", parent: k.key_id });
   return ok(r);
@@ -129,6 +137,7 @@ export async function handleAdmin(request, env, path) {
     const out = []; for (const kk of results) out.push(await makeStatement(env, kk, monthRange(body.month)));
     return J({ month: body.month, statements: out });
   }
+  if (path === "/admin/export/full" && request.method === "POST") { const day = /^\d{4}-\d{2}-\d{2}$/.test(body.day || "") ? body.day : new Date().toISOString().slice(0, 10); return J(await runExport(env, day)); }   // ALLOOLOO-FIX 2026-11-03: the full-table export by hand, for a missed night
   if (path === "/admin/export" && request.method === "POST") { const day = /^\d{4}-\d{2}-\d{2}$/.test(body.day || "") ? body.day : new Date(Date.now() - 864e5).toISOString().slice(0, 10); return J(await exportKeys(env, day)); }
   return J({ error: "not_found" }, 404);
 }

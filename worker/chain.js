@@ -25,6 +25,9 @@ export function idOf(hash) {
   for (let i = 0; i < 100; i += 5) out += B32[parseInt(bits.slice(i, i + 5), 2)];
   return "rco:" + out;
 }
+// RCO-03 (2026-11-02): the id rule of the gsc-hubs chain — dec_ + the first 24 hex of the receipt hash (the v1 hash rule is the same on every chain)
+export const decOf = (hash) => "dec_" + String(hash).replace(/^sha256:/, "").slice(0, 24);
+export const idOk = (row) => String(row.id || "").startsWith("dec_") ? decOf(row.hash) === row.id : idOf(row.hash) === row.id;
 export const second = (t) => new Date(t).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 let KEY = null;
@@ -41,7 +44,7 @@ export async function sign(env, hash) { return b64u(await crypto.subtle.sign("Ed
 // The public shape of a stored row, by version. v0 keeps its own field names forever.
 export function PUBLIC(row) {
   if (Number(row.v) === 1) return { v: 1, id: row.id, seq: row.seq, writer: row.writer, caller: row.caller, subject: row.subject, subject_type: row.subject_type, market: row.market,
-    rule_version: row.rule_version, cleared_at: row.cleared_at, answer_hash: row.answer_hash, prev_hash: row.prev_hash, hash: row.hash, sig: row.sig, kid: row.kid };
+    rule_version: row.rule_version, cleared_at: row.cleared_at, answer_hash: row.answer_hash, prev_hash: row.prev_hash, hash: row.hash, sig: row.sig, kid: row.kid, chain: row.chain || "cm" };   // RCO-03: the chain (not in the hash)
   return { decision_id: row.decision_id, gtin: row.gtin, market: row.market, actor_class: row.actor_class, rule_version: row.rule_version,
     cleared_at: row.cleared_at, writer: row.writer, prev_hash: row.prev_hash, hash: row.hash, sig: row.sig, kid: row.kid };
 }

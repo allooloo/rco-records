@@ -2,11 +2,12 @@ r"""build_pages.py — RCO-MOVE (Allooloo build memo v1.0): writes public/*.html
 name, no GSC name; no statistics (§2). The Worker fills {{version}} and {{as_of}}. Run: python -I rails\build_pages.py (from DOOR)."""
 import os, html
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PUB = os.path.join(ROOT, 'public')
+PUB = os.environ.get('RCO_PAGES_OUT') or os.path.join(ROOT, 'public')   # RCO-04: RCO_PAGES_OUT=<dir> builds beside, for the byte-for-byte proof
 ORIGIN, DOOR = 'https://rco-records.ai', 'https://mcp.rco-records.ai/mcp'
 REPO = 'https://github.com/allooloo/rco-records'
 OP, OP_URL, CONTACT = 'Allooloo Technologies Corp.', 'https://allooloo.ai', 'developers@allooloo.ai'
-AUD = True   # RCO-03 (2026-10-30): the auditors page is live
+AUD = True
+V0_SECTION = False   # RCO-04: the §4 HISTORY (V0) section is struck (2.4.1, v1 fields only on the human page); the generator now matches the served page   # RCO-03 (2026-10-30): the auditors page is live
 NAV = [('/#what', 'What RCO is'), ('/#spec', 'Receipt v1'), ('/#verify', 'Verify')] + ([('/auditors', 'Auditors')] if AUD else [])
 FOOT = [(DOOR, 'Door'), ('/.well-known/agent-card.json', 'Agent Card'), ('/.well-known/jwks.json', 'Keyring'), ('/llms.txt', 'llms.txt'), (REPO, 'Spec + verify (MIT)'),
         *([('/auditors', 'Auditors')] if AUD else []), ('/status', 'Status'), ('/terms', 'Terms of Use'), ('/privacy', 'Privacy'), ('/security', 'Report a Security Issue'), ('/no-cookies', 'No cookies')]
@@ -50,7 +51,7 @@ def shell(path, title, desc, body, hero=None):
 
 <footer class="footer">
   <div class="footer-bottom">
-    <span class="entity-line entity-line-footer">© 2026 <a href="{OP_URL}/" rel="noopener">{OP}</a></span>
+    <span class="entity-line entity-line-footer">© 2027 <a href="{OP_URL}/" rel="noopener">{OP}</a></span>
     <span class="footer-sep">·</span>
     <span>Surface {{{{version}}}} · as of {{{{as_of}}}}</span>
     <span class="footer-sep">·</span>
@@ -84,7 +85,7 @@ SPEC = [('<code>v</code>', '1'),
         ('<code>writer</code>', 'The gate that wrote it (<code>allooloo</code>).'),
         ('<code>caller</code>', 'Who asked: a customer key id, or an x402 wallet handle. Stored as sha256 of the value. Empty when unknown.'),
         ('<code>subject</code>', 'What was read: the identifier (ISIN, LEI, …).'),
-        ('<code>subject_type</code>', '<code>isin</code> | <code>lei</code> | <code>gtin</code> | … — open list. Replaces the v0 <code>gtin</code> field.'),
+        ('<code>subject_type</code>', '<code>isin</code> | <code>lei</code> | <code>gtin</code> | … — open list.'),
         ('<code>market</code>', 'ISO country or exchange code of the read.'),
         ('<code>rule_version</code>', 'Version of the rule set the gate cleared under.'),
         ('<code>cleared_at</code>', 'RFC 3339 UTC, seconds.'),
@@ -104,6 +105,7 @@ def index():
 </header>'''
     body = sec('what', '§1 WHAT RCO IS', 'One receipt per cleared read', '\n'.join([
         P('RCO — the Record of Cleared Orders — is the record of what an AI agent relied on. When an Allooloo gate clears a read, it writes one receipt to this chain: what was read, in which market, under which rule version, when, and the hash of the answer the agent received. The receipt is signed by Allooloo and chained to the one before it.'),
+        P('<strong>Receipts are written per customer key and per subject type; no cross-reading.</strong>'),   # RCO-03
         UL([f'Door: <a href="{DOOR}">{DOOR}</a> — Model Context Protocol (MCP), streamable HTTP, stateless, JSON-RPC 2.0, typed errors.',
             '<code>write_receipt</code> — called by the clearing gate; one bearer token per writer; returns the receipt.',
             '<code>verify_receipt</code> — public; by id; returns the receipt and the verification result.',
@@ -116,8 +118,8 @@ def index():
             UL([f'<code>{ORIGIN}/receipts/{{id}}</code> — the same answer as <code>verify_receipt</code>, over GET, for any client.',
                 'Keyring: <a href="/.well-known/jwks.json">/.well-known/jwks.json</a> — <code>rco-allooloo-2026-10</code> (signing), and the two historical keys the v0 receipts name.',
                 *(['Auditors: <a href="/auditors">how to verify, where the chain tip is, what a statement looks like</a>.'] if AUD else [])])]), dark=True) + \
-        sec('history', '§4 HISTORY (V0)', 'The receipts before 2026-10-29 keep their bytes', '\n'.join([
-            P('Receipts written before 2026-10-29 are version 0: <code>{decision_id, gtin, market, actor_class, rule_version, cleared_at, writer, prev_hash, hash, sig, kid}</code>, hash over the canonical JSON of <code>{actor_class, cleared_at, decision_id, gtin, market, prev_hash, rule_version, writer}</code>. Their bytes and field names are kept forever — the chain hashes over them. Version 1 starts at the first receipt written under Allooloo\'s key, chained to the last v0 hash: one chain.')]))
+        (V0_SECTION and sec('history', '§4 HISTORY (V0)', 'The receipts before 2026-10-29 keep their bytes', '\n'.join([
+            P('Receipts written before 2026-10-29 are version 0: <code>{decision_id, gtin, market, actor_class, rule_version, cleared_at, writer, prev_hash, hash, sig, kid}</code>, hash over the canonical JSON of <code>{actor_class, cleared_at, decision_id, gtin, market, prev_hash, rule_version, writer}</code>. Their bytes and field names are kept forever — the chain hashes over them. Version 1 starts at the first receipt written under Allooloo\'s key, chained to the last v0 hash: one chain.')])) or '')   # RCO-04: §4 struck from the served page in 2.4.1; kept here, off
     return shell('/', 'RCO Records — the record of what the agent relied on', 'RCO — the Record of Cleared Orders. Every read, receipted: one signed receipt per cleared read, chained, verifiable by anyone against a published key. Operated by Allooloo Technologies Corp.', body, hero)
 
 def plain(path, title, eyebrow, items, desc):

@@ -4,7 +4,7 @@
 // redirect) for six months from 2026-10-29, then review (§2). No statistics on any path (§2). Link relations only — no custom headers.
 import { handleMcp, verifyReceipt } from "./mcp.js";
 import { JWKS, LINK, ORIGIN, DOOR, agentCard, mcpCard, apiCatalog, llms, robots, securityTxt, sitemap, PAGE_PATHS } from "./kit.js";
-import { TOOLS } from "./mcp.js";
+import { TOOLS, WRITERS_DOC } from "./mcp.js";   // AIO-01: + the writer mapping
 import { runExport, exportStatus } from "./export.js";
 import { REGISTER_TOOLS, registerCall, handleAdmin, exportKeys } from "./register.js";
 import { handleApi, API_PATHS } from "./x402.js";   // 2.3.0: the /api 402 door (prices from /facts.json); MCP stays free
@@ -39,7 +39,7 @@ const withLink = (res) => { const h = new Headers(res.headers); h.set("link", LI
 const moved = (host, url) => new Response(null, { status: 301, headers: { location: `https://${host}${url.pathname}${url.search}`, "cache-control": "public, max-age=86400" } });
 
 export default {
-  async scheduled(event, env, ctx) { ctx.waitUntil(runExport(env, new Date().toISOString().slice(0, 10))); ctx.waitUntil(exportKeys(env, new Date(Date.now() - 864e5).toISOString().slice(0, 10))); },
+  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const d = new Date(); await runExport(env, d.toISOString().slice(0, 10)); await exportKeys(env, new Date(d - 864e5).toISOString().slice(0, 10)); })()); },   // ALLOOLOO-OPS-05: one after the other, not side by side on the store
   async fetch(request, env) {
     const url = new URL(request.url), host = url.hostname, path = url.pathname.replace(/\/+$/, "") || "/";
     // the old names: permanent 301s; the old MCP door keeps answering POST (and its CORS preflight) as an alias for six months
@@ -49,12 +49,14 @@ export default {
       if (path === "/mcp") return withLink(await handleMcp(request, env, url, EXTRA));
       if (path.startsWith("/admin/")) return handleAdmin(request, env, path);
       if (path === "/" || path === "/health.json") return withLink(J({ status: "ok", door: DOOR, page: ORIGIN + "/", tools: [...TOOLS, ...REGISTER_TOOLS].map((t) => t.name), version: env.VERSION, store: env.DB ? "bound" : "not bound", operator: "Allooloo Technologies Corp.", time: new Date().toISOString() }));
+      if (path === "/writers.json") return withLink(J(WRITERS_DOC));   // AIO-01: the published writer mapping
       if (KIT[path]) return withLink(await KIT[path](env, request));
       return withLink(notFound(path));
     }
     if (host === NEW_APEX && API_PATHS.includes(path)) return withLink(await handleApi(request, env, url));
     if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) return new Response("Method Not Allowed", { status: 405, headers: { allow: "GET, HEAD, OPTIONS" } });
     if (path === "/mcp") return Response.redirect(DOOR, 308);
+    if (path === "/writers.json") return withLink(J(WRITERS_DOC));   // AIO-01
     if (KIT[path]) return withLink(await KIT[path](env, request));
     if (path === "/health.json") return withLink(J({ status: "ok", surface: ORIGIN, door: DOOR, version: env.VERSION, store: env.DB ? "bound" : "not bound", export: await exportStatus(env), time: new Date().toISOString() }));
     const m = /^\/receipts\/((?:rco:|rco%3[aA])[a-z2-7]{20}|dec_[0-9a-f]{8,48})$/.exec(path);

@@ -47,6 +47,7 @@ export const mcpCard = (version, tools) => ({
   tools: tools.map((t) => ({ name: t.name, description: t.description, annotations: t.annotations })),
   authentication: { verify_receipt: "none", write_receipt: "Authorization: Bearer <writer token>", list_receipts: "Authorization: Bearer <customer key>", get_statement: "Authorization: Bearer <customer key>", issue_auditor_key: "Authorization: Bearer <customer key>" },
   operator: OPERATOR, surface: ORIGIN, agent_card: `${ORIGIN}/.well-known/agent-card.json`, keyring: `${ORIGIN}/.well-known/jwks.json`, verify: `${ORIGIN}/receipts/{id}`, spec: `${ORIGIN}/#spec`,
+  payment: { page: "https://data-paygo.ai/", x402: `${ORIGIN}/api` },   // TMKT-02 (PAYGO-01): where the mechanism is described
 });
 
 export const apiCatalog = () => ({ linkset: [{ anchor: DOOR, "service-desc": [{ href: `${ORIGIN}/.well-known/mcp.json`, type: "application/json" }], "service-doc": [{ href: `${ORIGIN}/llms.txt`, type: "text/plain" }], status: [{ href: `${ORIGIN}/health.json` }], "service-meta": [{ href: `${ORIGIN}/.well-known/agent-card.json`, type: "application/json" }] }] });
@@ -56,6 +57,8 @@ export const llms = (version, extra = "") => `# RCO Records — Record of Cleare
 > ${LINE} Agent line: ${AGENT_LINE}
 
 ${DEFINITION}
+
+Receipts are written per customer key and per subject type; no cross-reading. (RCO-03: each customer key reads its own rows; the gsc-hubs chain carries GTIN receipts under dec_ ids beside the capital-markets chain.)
 
 Operator: ${OPERATOR} · ${OPERATOR_URL} · Surface: ${ORIGIN} · Door: ${DOOR} · Surface version ${version}
 

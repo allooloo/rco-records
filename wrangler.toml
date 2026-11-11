@@ -2,7 +2,7 @@
 # ("Allooloo Agent Traffic" on the wire — the one Cloudflare account; no re-home needed). D1 rco-receipts, Ed25519 kid rco-allooloo-2026-10.
 # Four custom domains: the new hosts, and the old names as permanent 301s (MCP POST on mcp.rco-a2a.ai answered as an alias for six months).
 name = "rco-door"
-main = "worker/index.js"
+main = "worker/entry.js"   # R-043 (TMKT-04): worker/index.js wrapped by foragents.js
 compatibility_date = "2026-10-01"
 account_id = "dd2832b36f171b815f84c8487aada36b"
 workers_dev = false
@@ -17,7 +17,7 @@ routes = [
 crons = ["30 5 * * *"]   # nightly export of the full table (UTC); puts only when EXPORT_KEY_ID / EXPORT_SECRET are placed (the CEO's hand)
 
 [vars]
-VERSION = "2.3.1"
+VERSION = "2.6.6"   # 2.6.6 = RCO-KEY-FO rider: verify_receipt method text names fo-kg (fo-record) among the dec_ chains · 2.6.5 = RCO-KEY-FO: fo-kg on the published writers list (chain fo-kg, fo-record, write_receipt scope); fo-record ids checked; keys.scope · 2.6.4 = ALLOOLOO-OPS-05: export reads paced + retried on D1 overload; cron runs full export then per-key export · 2.6.3 = RCO-LIST-01 rider: verify_receipt method text, dec_ ids on any GTIN writer's chain · 2.6.2 = RCO-LIST-01 2026-11-04: agent-bev on the published writers list (chain agent-bev, gtin) · 2.6.1 = ALLOOLOO-FIX 2026-11-03: the nightly export streamed (S3 multipart, DigestStream), version id recorded · 2.6.0 = RCO-03: GSC as customer — the gsc-hubs writer key and chain (dec_ ids, gtin only); per-chain tips; the scope line · 2.5.3 = R-043 (TMKT-04): the FOR AGENTS row and the six files ·   # 2.5.2 = R-042 corrected (CEO 2026-11-02): the price lines restored as they were in 2.5.0 · 2.5.1 = NAV-02: the price lines struck (withdrawn) · 2.5.0 = TMKT-02: the door writer gettargetmarket in the published writer mapping (/writers.json); the descriptor's payment.page · 2.4.1 2.4.1 = the human page carries receipt v1 fields only (RCO-10060 v1.1; the v0 hash-spec section struck) · 2.4.0   # 2.4.0 = AIO-01: the published writer mapping (/writers.json); node gates write under their own writer name (X-RCO-Writer)
 AS_OF = "2026-10-30"
 KID = "rco-allooloo-2026-10"
 EXPORT_BUCKET = "rco-receipts-copy"

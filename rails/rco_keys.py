@@ -1,5 +1,5 @@
 r"""rco_keys.py — RCO-03: the Register's admin command lines (Allooloo build memo v1.0 §6). The admin token is read in-process from
-C:\ALLOOLOO\AGENT KEYS\rco-admin.txt; an issued key value is written to C:\ALLOOLOO\AGENT KEYS\rco-customer-<key id>.txt and never printed.
+C:\ALLOOLOO\AGENT KEYS\rco-admin-token.txt (since 2026-10-30; rco-admin.txt is retired); an issued key value is written to C:\ALLOOLOO\AGENT KEYS\rco-customer-<key id>.txt and never printed.
 
   python -I rails\rco_keys.py issue "<firm name>" [--demo]      issue a customer key (or the sales demo key)
   python -I rails\rco_keys.py list                                list keys (ids, names, kinds, export, revoked) — no values
@@ -15,7 +15,7 @@ KEYS = r'C:\ALLOOLOO\AGENT KEYS'
 
 
 def call(method, path, body=None):
-    tok = open(os.path.join(KEYS, 'rco-admin.txt'), encoding='utf-8-sig').read().strip()
+    tok = open(os.path.join(KEYS, 'rco-admin-token.txt'), encoding='utf-8-sig').read().strip()
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(DOOR + path, data=data, method=method, headers={'authorization': 'Bearer ' + tok, 'content-type': 'application/json', 'user-agent': 'Allooloo rco-admin'})
     try:
