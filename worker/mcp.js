@@ -84,7 +84,10 @@ function normalise(a) {
 
 // RCO-03: the tip of one chain (cm: the rows before RCO-03, chain NULL, and those written as 'cm'); a chain with no row yet starts at its genesis (chains table)
 async function chainTip(env, chain) {
-  const t = chain === "cm" ? await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain IS NULL OR chain = 'cm' ORDER BY seq DESC LIMIT 1").first()
+  // ALLOOLOO-FIX-01 (2026-11-19): the one query with OR could not walk an index (286,810 rows read per write, the store refused writes that arrived together);
+  // two indexed reads of one row each give the same tip
+  const cmTip = async () => { const x = await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain = 'cm' ORDER BY seq DESC LIMIT 1").first(); const y = await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain IS NULL ORDER BY seq DESC LIMIT 1").first(); return x && y ? (x.seq > y.seq ? x : y) : (x || y); };
+  const t = chain === "cm" ? await cmTip()
     : await env.DB.prepare("SELECT seq, hash FROM receipts WHERE chain = ?1 ORDER BY seq DESC LIMIT 1").bind(chain).first();
   if (t) return t.hash;
   const g = await env.DB.prepare("SELECT genesis FROM chains WHERE chain = ?1").bind(chain).first(); return g ? g.genesis : null;
@@ -105,9 +108,12 @@ export async function writeReceipt(env, writer, args, callerHash, opts = {}) {  
   const idem = "sha256:" + (await sha256hex(JSON.stringify([writer, base.subject, base.subject_type, base.market, base.rule_version, base.cleared_at, base.answer_hash])));
   const have = await env.DB.prepare("SELECT * FROM receipts WHERE idem = ?1").bind(idem).first();
   if (have) return ok({ receipt: PUBLIC(have), idempotent: true, verify: `${ORIGIN}/receipts/${have.id}` });
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const prev = await chainTip(env, chain); if (!prev) return typed("store_error", `no genesis for chain ${chain}`);
-    const top = await env.DB.prepare("SELECT seq FROM receipts ORDER BY seq DESC LIMIT 1").first();   // RCO-03: one seq across the store; each chain links its own tip
+  for (let attempt = 0; attempt < 14; attempt++) {   // ALLOOLOO-FIX-01 (2026-11-19): was 5 tries with no pause; writers that arrived together collided on every try and were refused
+    if (attempt) await new Promise((res) => setTimeout(res, 30 + Math.random() * 180 * Math.min(attempt, 5)));
+    let prev, top;   // ALLOOLOO-FIX-01: a read the store refuses under load is one failed try, not the end of the write
+    try { prev = await chainTip(env, chain); top = await env.DB.prepare("SELECT seq FROM receipts ORDER BY seq DESC LIMIT 1").first(); } catch (e) { console.log("rco write: read refused", attempt, String((e && e.message) || e).slice(0, 200)); continue; }
+    if (!prev) return typed("store_error", `no genesis for chain ${chain}`);
+    void 0;   // RCO-03: one seq across the store; each chain links its own tip
     const row = { ...base, seq: top.seq + 1, prev_hash: prev, chain };
     row.hash = await hashOf(row); row.id = chain === "cm" ? idOf(row.hash) : decOf(row.hash); row.sig = await sign(env, row.hash);
     try {
@@ -117,11 +123,11 @@ export async function writeReceipt(env, writer, args, callerHash, opts = {}) {  
     } catch (e) {
       const msg = String((e && e.message) || e);
       if (/UNIQUE.*idem/i.test(msg)) { const h = await env.DB.prepare("SELECT * FROM receipts WHERE idem = ?1").bind(idem).first(); if (h) return ok({ receipt: PUBLIC(h), idempotent: true, verify: `${ORIGIN}/receipts/${h.id}` }); }
-      if (!/UNIQUE/i.test(msg)) return typed("store_error", "the store refused the write", { detail: msg.slice(0, 200) });
+      if (!/UNIQUE/i.test(msg)) { console.log("rco write: insert refused", attempt, msg.slice(0, 200)); if (/overload|queued|timeout|network|reset|busy|locked/i.test(msg)) continue; return typed("store_error", "the store refused the write", { detail: msg.slice(0, 200) }); }
       // another write took the tip between our read and our insert: re-read and retry
     }
   }
-  return typed("chain_contention", "the chain tip moved five times during this write; retry");
+  return typed("chain_contention", "the chain tip moved fourteen times during this write; retry");
 }
 
 async function sigOk(row, key) {
@@ -186,7 +192,7 @@ export async function handleMcp(request, env, url, extra = { tools: [], call: as
           out.push(r === undefined ? rpcErr(id, -32602, `unknown tool: ${name}`, { tools: tools.map((t) => t.name) }) : rpc(id, r));
         }
       } else out.push(rpcErr(id, -32601, `method not found: ${m.method}`));
-    } catch (e) { out.push(rpcErr(id, -32603, "internal error")); }
+    } catch (e) { console.log("rco mcp: internal error", m.method, (m.params && m.params.name) || "", String((e && e.message) || e).slice(0, 300)); out.push(rpcErr(id, -32603, "internal error")); }
   }
   if (!out.length) return new Response(null, { status: 202, headers: H });
   return new Response(JSON.stringify(batch ? out : out[0], null, 1), { status: 200, headers: H });
