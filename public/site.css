@@ -1,0 +1,96 @@
+/* getissuernews.ai — one more surface on the shared Allooloo template (Site Book v1.2 §1; the stylesheet of record C:\ALLOOLOO\CM-KG\ESTATE\public\estate.css, copied as the one template
+   rule). Allooloo navy #14213D is the working accent (buttons, outlines, icons, active nav); green #0B6E4F means live and confirmed, nothing else; the crescent mark keeps its own navy
+   #011945. White ground; the device decides the tint; the header button flips data-theme on <html> for this visit only (iw.js — nothing stored, no cookie). Every colour is a token below;
+   no literal colour anywhere else. an earlier order, 2026-10-21; the an earlier order sheet stands beside as a kept copy. */
+:root{--paper:#FFFFFF;--ink:#3A4256;--navy:#14213D;--on-navy:#FFFFFF;--green:#0B6E4F;--rule:#D9DDE6;--tint:#F3F5F9;--muted:#6B7280;--card:#FFFFFF;--iw:#011945;--on-iw:#FFFFFF;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1626;--ink:#E8ECF4;--navy:#DCE4F5;--on-navy:#14213D;--green:#3CCB94;--rule:#263049;--tint:#171F33;--muted:#9AA3B5;--card:#171F33;--iw:#FFFFFF;--on-iw:#011945}}
+:root[data-theme="dark"]{--paper:#0F1626;--ink:#E8ECF4;--navy:#DCE4F5;--on-navy:#14213D;--green:#3CCB94;--rule:#263049;--tint:#171F33;--muted:#9AA3B5;--card:#171F33;--iw:#FFFFFF;--on-iw:#011945}
+html{color-scheme:light dark}html[data-theme="light"]{color-scheme:light}html[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
+.in,main,footer{max-width:1200px;margin:0 auto;padding:0 1.25rem}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;color:var(--navy)}
+.mark{width:28px;height:28px;color:var(--iw);flex:none}
+
+/* header: the Allooloo sticky bar with a hairline — the mark at 28 px and the name in place of the Allooloo logo; four-item nav; tint; the navy pill */
+header{display:contents}
+.bar{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar .in{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1.25rem;min-height:68px;padding-top:.55rem;padding-bottom:.55rem}
+.logo{display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--navy);font:600 20px/1 var(--sans);line-height:1}
+nav{margin-left:auto}nav ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.25rem 1.5rem}
+nav a{display:inline-block;font:500 15px/1.4 var(--sans);color:var(--navy);text-decoration:none;padding:.3rem 0;border-bottom:2px solid transparent}
+nav a:hover{border-bottom-color:var(--rule)}nav a[aria-current]{border-bottom-color:var(--navy)}
+.tint{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--navy);cursor:pointer;padding:0}
+.tint:hover{background:var(--tint)}.tint .sun{display:none}
+.state,.live{font:13px/1.5 var(--mono);font-variant:small-caps;letter-spacing:.06em;color:var(--muted);margin:1rem 0 0}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:0 .5em .1em 0;vertical-align:middle}
+
+/* buttons: pills. Primary solid navy; secondary navy outline. On the dark ground the primary is pale with navy text (tokens). */
+.btn,form button[type=submit]{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.3rem;border-radius:999px;border:1.5px solid var(--navy);font:600 15px/1.2 var(--sans);text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn.primary,form button[type=submit]{background:var(--navy);color:var(--on-navy)}.btn.primary .ic{color:var(--on-navy)}
+.btn.secondary{background:transparent;color:var(--navy)}
+.btn:hover,form button[type=submit]:hover{text-decoration:none;opacity:.88}.btn.secondary:hover{background:var(--tint);opacity:1}
+.btn .ic{width:18px;height:18px}
+.cta{padding:.55rem 1.05rem}
+
+/* type: big sans headings, sentence case; body 16 px, 72 characters a line; mono for ids, dates, versions, signatures and the LIVE line */
+.hero{padding:1.25rem 0 .5rem}
+h1{font:700 clamp(32px,4.2vw,40px)/1.1 var(--sans);letter-spacing:-.018em;color:var(--navy);margin:.9rem 0 1rem;max-width:24ch}
+.sub{font:400 18px/1.5 var(--sans);color:var(--muted);margin:0 0 .25rem;max-width:72ch}
+.hero .state,.hero .live{margin:.9rem 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.5rem 0 .5rem}
+h2{font:650 clamp(24px,2.4vw,32px)/1.2 var(--sans);letter-spacing:-.012em;color:var(--navy);margin:3rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.sec h2,.card-sec h2,.contact h2{border-top:0;padding-top:0}
+h3{font:600 19px/1.3 var(--sans);color:var(--navy);margin:.25rem 0 .4rem}
+p{margin:.6rem 0;max-width:72ch}.lead{font-size:18px;line-height:1.6;color:var(--ink)}
+.muted,.src,.asof{color:var(--muted);font-size:.9em}.mono,.scale,.n{font-family:var(--mono)}
+a{color:var(--navy);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em}a:hover{text-decoration-thickness:2px}
+code,pre,dt,td.id,th.id{font-family:var(--mono)}code{background:var(--tint);color:var(--navy);padding:.08em .35em;border-radius:4px;font-size:.9em}
+pre{background:var(--tint);color:var(--ink);padding:.8rem 1rem;overflow:auto;font-size:.85em;line-height:1.45;border:1px solid var(--rule);border-radius:10px;max-width:none}pre code{background:none;padding:0;color:var(--ink)}
+.notice{margin-top:2rem}
+
+/* tables: hairline rows */
+table{border-collapse:collapse;width:100%;margin:.6rem 0;font-size:.93em}th,td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid var(--rule)}
+thead th{font:600 12px/1.4 var(--sans);letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--navy)}thead th:empty{border-bottom:0;padding:0}
+td.n,th.n,.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto}.nw,td code{white-space:nowrap}
+
+/* product cards (Site Book v1.2 §2): three in a row, stack on phone — title, two lines, one link. Navy 1 px outline, 8 px radius, no shadow, no icon. */
+.sec{margin:2.5rem 0 0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:0}
+.card{background:var(--card);border:1px solid var(--navy);border-radius:8px;padding:1.25rem 1.3rem;display:flex;flex-direction:column;gap:.2rem}
+.card p{margin:.2rem 0 1rem;color:var(--ink)}.card a{margin-top:auto;display:inline-flex;align-items:center;gap:.35rem;font-weight:600;text-decoration:none}.card a:hover{text-decoration:underline}
+
+/* the scale strip: one row, mono, read from facts.json */
+.scale{font:14px/1.7 var(--mono);color:var(--ink);margin:1.5rem 0 0;max-width:none}.scale b{font-weight:500;color:var(--muted)}
+
+/* connect: the address with a Copy button; one card per cloud */
+.card-sec{border:1px solid var(--rule);border-radius:14px;padding:1.75rem;background:var(--card);margin:1.5rem 0 0}
+.addr{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin:1rem 0;max-width:none}.addr code{font-size:15px;padding:.65rem .9rem;border:1px solid var(--rule);border-radius:10px;word-break:break-all}
+.copy{padding:.6rem 1.1rem}
+
+/* contact block of record (the Allooloo form): labels above, full column width, navy outline at all times */
+.contact h2{margin-top:0}
+form{margin:.8rem 0}label{display:block;margin:.8rem 0 .35rem;font:600 14px/1.4 var(--sans);color:var(--navy)}
+input,textarea{display:block;width:100%;padding:.7rem .85rem;border:1.5px solid var(--navy);border-radius:10px;font:inherit;color:var(--ink);background:var(--paper)}
+input:focus,textarea:focus{outline:2px solid var(--navy);outline-offset:2px}
+form button[type=submit]{display:inline-flex;margin:1rem 0 0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* brand band above the one-row footer (ruling 5): full width, the Issuer News navy on white, inverted in the dark tint — mark · Issuer News · tagline · operated by Allooloo Technologies Corp. */
+footer{margin-top:4.5rem;padding-bottom:2rem;color:var(--muted);font-size:14px}
+.band{display:flex;align-items:center;gap:1.25rem;background:var(--tint);border:1px solid var(--rule);border-radius:14px;padding:2rem 2rem 1.8rem;margin:0 0 1.5rem;color:var(--iw)}
+.band .mark{width:48px;height:48px;color:var(--iw)}.band p{margin:.3rem 0;max-width:75ch;color:var(--ink);font-size:16px}
+.band .name{font:700 24px/1.3 var(--sans);color:var(--iw);margin:0 0 .5rem}.band .tag{font:400 16px/1.4 var(--sans);color:var(--iw)}.band .op{font:13px/1.5 var(--mono);color:var(--muted)}
+footer .line,footer .row{margin:.5rem 0;line-height:1.7;max-width:none}footer a{color:var(--navy)}
+
+/* dark ground: the tint button shows the sun */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tint .sun{display:block}:root:not([data-theme="light"]) .tint .moon{display:none}}
+:root[data-theme="dark"] .tint .sun{display:block}:root[data-theme="dark"] .tint .moon{display:none}
+
+@media (max-width:980px){.cards{grid-template-columns:1fr}}
+@media (max-width:760px){nav{order:3;flex-basis:100%;margin-left:0}nav ul{gap:.2rem 1.4rem}.tint{margin-left:auto}.bar .in{gap:.4rem .75rem}}
+@media (max-width:640px){body{font-size:15px}h1{font-size:30px}.lead{font-size:16.5px}.band{padding:1.4rem;flex-direction:column;align-items:flex-start;gap:.75rem}.card-sec{padding:1.25rem}.cta{padding:.5rem .9rem;font-size:14px}}
+/* ALLOOLOO-HEADER-01 (2026-11-21): the second row under the Allooloo header — the name in plain text, then Issuer News's own links. The header, the footer and the day/night colours come from estate.css, loaded after this sheet. */
+.iwrow{margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:.25rem 1.5rem;padding:.55rem 0;border-bottom:1px solid var(--rule)}.iwrow .iwname{font:600 15px/1.4 var(--sans);color:var(--navy)}.iwrow ul{margin:0}footer .band{display:block}

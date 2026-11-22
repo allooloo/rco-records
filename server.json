@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.allooloo/rco-records",
-  "title": "RCO Records - Record of Cleared Orders",
+  "title": "Allooloo Receipts",
   "description": "The record of what the agent relied on: a signed, chained receipt per cleared read. Verify by id.",
-  "version": "2.6.6",
+  "version": "2.7.0",
   "websiteUrl": "https://rco-records.ai",
   "repository": {
     "url": "https://github.com/allooloo/rco-records",

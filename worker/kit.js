@@ -3,7 +3,7 @@
 export const ORIGIN = "https://rco-records.ai", DOOR = "https://mcp.rco-records.ai/mcp", OPERATOR = "Allooloo Technologies Corp.", OPERATOR_URL = "https://allooloo.ai";
 export const CONTACT = "developers@allooloo.ai";
 export const LINE = "RCO — the record of what the agent relied on.", AGENT_LINE = "every read, receipted.";
-export const DEFINITION = "RCO-10060 defines a signed receipt for a cleared read of a listed issuer's record. The receipt identifies the subject, the jurisdiction, the clearance rule, the stated time of the read and the hash of the signed answer supplied, and links that event into a verifiable receipt chain. The RCO door signs receipts under its own key; the producing node separately signs its content under the record key. A consumer verifies the receipt, matches the answer hash and verifies the record, and so holds attributable evidence of both the content and the read. RCO preserves the record of the read without holding the content or judging its truth. Receipt v1: {v, id, seq, writer, caller, subject, subject_type, market, rule_version, cleared_at, answer_hash, prev_hash, hash, sig, kid}. Tools: write_receipt (writer credential), verify_receipt (public), list_receipts, get_statement and issue_auditor_key (the firm's own key).";   // STACK-01 (2026-10-30): the canonical mission text of RCO-10060 v1.0, then the receipt v1 field list
+export const DEFINITION = "RCO-10060 defines a signed receipt for a cleared read of a listed issuer's record. The receipt identifies the subject, the jurisdiction, the clearance rule, the stated time of the read and the hash of the signed answer supplied, and links that event into a verifiable receipt chain. The RCO MCP signs receipts under its own key; the producing node separately signs its content under the record key. A consumer verifies the receipt, matches the answer hash and verifies the record, and so holds attributable evidence of both the content and the read. RCO preserves the record of the read without holding the content or judging its truth. Receipt v1: {v, id, seq, writer, caller, subject, subject_type, market, rule_version, cleared_at, answer_hash, prev_hash, hash, sig, kid}. Tools: write_receipt (writer credential), verify_receipt (public), list_receipts, get_statement and issue_auditor_key (the firm's own key).";   // STACK-01 (2026-10-30): the canonical mission text of RCO-10060 v1.0, then the receipt v1 field list
 
 // The keyring: Allooloo's signing key, and the two historical keys the v0 receipts name (verification only; neither signs anything here).
 export const JWKS = {
@@ -22,16 +22,16 @@ export const LINK = [
   `<${ORIGIN}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`,
 ].join(", ");
 
-export const SKILLS = [
-  { id: "write_receipt", name: "write_receipt", description: "Write one chained, signed v1 receipt for a cleared read (bearer token per writer); returns the receipt.", tags: ["receipt", "write", "authenticated"] },
-  { id: "verify_receipt", name: "verify_receipt", description: "Return one receipt by id (rco:… or a v0 dec_…) with the verification result and the key that checks it. Public.", tags: ["receipt", "verify", "public"] },
-  { id: "list_receipts", name: "list_receipts", description: "A customer key's own receipts, by seq or date range (RCO Register).", tags: ["register", "customer-key"] },
-  { id: "get_statement", name: "get_statement", description: "A signed monthly or on-demand statement of a customer key's slice (RCO Register).", tags: ["register", "statement", "customer-key"] },
-  { id: "issue_auditor_key", name: "issue_auditor_key", description: "A read-only auditor sub-key on a customer key's own slice.", tags: ["register", "auditor"] },
+export const SKILLS = [   // ALLOOLOO-RCO-01 F: the five tools, in order, with their descriptions; ids, names and tags unchanged
+  { id: "verify_receipt", name: "verify_receipt", description: "Check any receipt by its id: the hash, the signature and its place in the chain. Public, no key needed.", tags: ["receipt", "verify", "public"] },
+  { id: "list_receipts", name: "list_receipts", description: "The audit trail of a firm's own AI agents: every cleared read, in order, under the firm's key.", tags: ["register", "customer-key"] },
+  { id: "get_statement", name: "get_statement", description: "A signed statement of a firm's receipts for a period, for books and records and for its auditor.", tags: ["register", "statement", "customer-key"] },
+  { id: "issue_auditor_key", name: "issue_auditor_key", description: "A firm gives its auditor a key to read and verify the firm's receipts independently.", tags: ["register", "auditor"] },
+  { id: "write_receipt", name: "write_receipt", description: "Called by Allooloo's own MCPs when a read is cleared. One receipt per cleared read.", tags: ["receipt", "write", "authenticated"] },
 ];
 
 export const agentCard = (version, skills = SKILLS) => ({
-  protocolVersion: "0.3.0", kind: "agent-card", name: "RCO Records — Record of Cleared Orders",
+  protocolVersion: "0.3.0", kind: "agent-card", name: "Allooloo Receipts",   /* ALLOOLOO-RCO-01 G1: the statement entry's short name sets it on every read; this is the fallback */
   description: DEFINITION, url: DOOR, version, documentationUrl: `${ORIGIN}/llms.txt`, iconUrl: `${ORIGIN}/icon-512.png`,
   provider: { organization: OPERATOR, url: OPERATOR_URL }, contact: `mailto:${CONTACT}`,
   capabilities: { streaming: false, pushNotifications: false, stateTransitionHistory: false },
@@ -42,8 +42,8 @@ export const agentCard = (version, skills = SKILLS) => ({
   keyring: `${ORIGIN}/.well-known/jwks.json`, kid: "rco-allooloo-2026-10",
 });
 
-export const mcpCard = (version, tools) => ({
-  serverInfo: { name: "rco-records", title: "RCO Records — Record of Cleared Orders", version }, transport: { type: "streamable-http", endpoint: DOOR }, capabilities: { tools: {} },
+export const mcpCard = (version, tools, title = "Allooloo Receipts") => ({   // ALLOOLOO-RCO-01 G1, G4
+  name: title, serverInfo: { name: "rco-records", title, version }, transport: { type: "streamable-http", endpoint: DOOR }, capabilities: { tools: {} },
   tools: tools.map((t) => ({ name: t.name, description: t.description, annotations: t.annotations })),
   authentication: { verify_receipt: "none", write_receipt: "Authorization: Bearer <writer token>", list_receipts: "Authorization: Bearer <customer key>", get_statement: "Authorization: Bearer <customer key>", issue_auditor_key: "Authorization: Bearer <customer key>" },
   operator: OPERATOR, surface: ORIGIN, agent_card: `${ORIGIN}/.well-known/agent-card.json`, keyring: `${ORIGIN}/.well-known/jwks.json`, verify: `${ORIGIN}/receipts/{id}`, spec: `${ORIGIN}/#spec`,
@@ -131,7 +131,7 @@ Preferred-Languages: en
 Policy: ${ORIGIN}/security
 `;
 
-export const PAGE_PATHS = ["/", "/auditors", "/status", "/terms", "/privacy", "/security", "/no-cookies"];
+export const PAGE_PATHS = ["/", "/mcp", "/auditors", "/status", "/terms", "/privacy", "/security", "/no-cookies"];   // ALLOOLOO-RCO-01 C: + /mcp
 export const sitemap = (paths = PAGE_PATHS) => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${[...paths, "/llms.txt"].map((p) => `  <url><loc>${ORIGIN}${p}</loc></url>`).join("\n")}

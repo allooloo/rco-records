@@ -102,13 +102,13 @@ async function issueAuditorKey(request, env, a) {
 }
 
 export const REGISTER_TOOLS = [
-  { name: "list_receipts", description: "Your own receipts only — the rows whose caller is your customer key — by seq range (from_seq, to_seq, after_seq) or date range (from, to: YYYY-MM-DD, to inclusive), limit ≤ 500. Authorization: Bearer <customer key>. Refuses without a key.",
+  { name: "list_receipts", description: "The audit trail of a firm's own AI agents: every cleared read, in order, under the firm's key.",
     inputSchema: { type: "object", properties: { from_seq: { type: "integer" }, to_seq: { type: "integer" }, after_seq: { type: "integer" }, from: { type: "string" }, to: { type: "string" }, limit: { type: "integer" } } },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-  { name: "get_statement", description: "A signed statement of your slice for a month (month: YYYY-MM) or a date range (from, to: YYYY-MM-DD, to exclusive): count, first and last seq, slice digest, the chain tip at issue, Ed25519 signature by Allooloo. Authorization: Bearer <customer key>.",
+  { name: "get_statement", description: "A signed statement of a firm's receipts for a period, for books and records and for its auditor.",
     inputSchema: { type: "object", properties: { month: { type: "string" }, from: { type: "string" }, to: { type: "string" } } },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } },
-  { name: "issue_auditor_key", description: "Issue a read-only sub-key on your own slice for your auditor (list_receipts and get_statement only). Authorization: Bearer <customer key>. The key value is returned once.",
+  { name: "issue_auditor_key", description: "A firm gives its auditor a key to read and verify the firm's receipts independently.",
     inputSchema: { type: "object", properties: { name: { type: "string" } } },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } },
 ];

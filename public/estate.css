@@ -1,0 +1,120 @@
+/* The one stylesheet for every Allooloo surface. Surface refurb (Brand Book + Site Book + Addendum A, CEO Sept 28 2026).
+   Two colours (navy does the work; green means live and confirmed, nothing else) on a white ground, with a dark tint of the same two colours.
+   Every colour comes from a token below; no literal colour anywhere else in this file. The device setting decides on load; the header button flips
+   data-theme on <html> for the current page view only (webmcp.js; nothing is stored). */
+:root{--paper:#FFFFFF;--ink:#3A4256;--navy:#14213D;--on-navy:#FFFFFF;--green:#0B6E4F;--rule:#D9DDE6;--tint:#F3F5F9;--muted:#6B7280;--card:#FFFFFF;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1626;--ink:#E8ECF4;--navy:#DCE4F5;--on-navy:#14213D;--green:#3CCB94;--rule:#263049;--tint:#171F33;--muted:#9AA3B5;--card:#171F33}}
+:root[data-theme="dark"]{--paper:#0F1626;--ink:#E8ECF4;--navy:#DCE4F5;--on-navy:#14213D;--green:#3CCB94;--rule:#263049;--tint:#171F33;--muted:#9AA3B5;--card:#171F33}
+html{color-scheme:light dark}html[data-theme="light"]{color-scheme:light}html[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
+.in,main,footer{max-width:1200px;margin:0 auto;padding:0 1.25rem}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;color:var(--navy)}
+.ic.lg{width:30px;height:30px;display:block;margin:0 0 .75rem}
+
+/* header: sticky bar with a hairline; the LIVE line of record sits under it */
+header{display:contents}
+.bar{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar .in{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1.25rem;min-height:68px;padding-top:.55rem;padding-bottom:.55rem}
+.logo{display:block;line-height:0}.logo img{height:36px;width:auto}
+nav{margin-left:auto}nav ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.25rem 1.5rem}
+nav a{display:inline-block;font:500 15px/1.4 var(--sans);color:var(--navy);text-decoration:none;padding:.3rem 0;border-bottom:2px solid transparent}
+nav a:hover{border-bottom-color:var(--rule)}nav a[aria-current]{border-bottom-color:var(--navy)}
+.tint{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--navy);cursor:pointer;padding:0}
+.tint:hover{background:var(--tint)}.tint .sun{display:none}
+.state{font:13px/1.5 var(--mono);font-variant:small-caps;letter-spacing:.06em;color:var(--muted);margin:1rem 0 0}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:0 .5em .1em 0;vertical-align:middle}
+
+/* buttons: pills. Primary solid navy; secondary navy outline. On the dark ground the primary is pale with navy text (tokens). */
+.btn,form button[type=submit]{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.3rem;border-radius:999px;border:1.5px solid var(--navy);font:600 15px/1.2 var(--sans);text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn.primary,form button[type=submit]{background:var(--navy);color:var(--on-navy)}.btn.primary .ic{color:var(--on-navy)}
+.btn.secondary{background:transparent;color:var(--navy)}
+.btn:hover,form button[type=submit]:hover{text-decoration:none;opacity:.88}.btn.secondary:hover{background:var(--tint);opacity:1}
+.btn .ic{width:18px;height:18px}
+.cta{padding:.55rem 1.05rem}
+
+/* type */
+.hero{padding:1.25rem 0 .5rem}
+h1{font:700 clamp(40px,5.4vw,76px)/1.04 var(--sans);letter-spacing:-.022em;color:var(--navy);margin:.9rem 0 1rem;max-width:22ch}
+.sub{font:400 clamp(20px,2vw,26px)/1.45 var(--sans);color:var(--muted);margin:0 0 .25rem;max-width:40ch}
+.hero .state{margin:.9rem 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.5rem 0 .5rem}
+h2{font:650 clamp(24px,2.4vw,32px)/1.2 var(--sans);letter-spacing:-.012em;color:var(--navy);margin:3rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.sec h2,.card-sec h2{border-top:0;padding-top:0}
+h3{font:600 19px/1.3 var(--sans);color:var(--navy);margin:.25rem 0 .4rem}
+p{margin:.6rem 0}.lead{font-size:18px;line-height:1.6;color:var(--ink)}
+.muted,.src,.asof{color:var(--muted);font-size:.9em}.mono{font-family:var(--mono)}
+a{color:var(--navy);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em}a:hover{text-decoration-thickness:2px}
+code,pre,dt,td.id,th.id{font-family:var(--mono)}code{background:var(--tint);color:var(--navy);padding:.08em .35em;border-radius:4px;font-size:.9em}
+pre{background:var(--tint);color:var(--ink);padding:.8rem 1rem;overflow:auto;font-size:.85em;line-height:1.45;border:1px solid var(--rule);border-radius:10px}pre code{background:none;padding:0}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.35rem 1.1rem;margin:.5rem 0}dt{color:var(--muted);font-size:.88em;padding-top:.12em}dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kicker{font:12px/1.5 var(--mono);letter-spacing:.04em;color:var(--muted);margin:0 0 .6rem}
+p,dd,li{text-align:left}
+
+/* tables: hairline rows; node, drop and surface never break; green dot on live only */
+table{border-collapse:collapse;width:100%;margin:.6rem 0;font-size:.93em}th,td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid var(--rule)}
+thead th{font:600 12px/1.4 var(--sans);letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--navy)}
+td.n,th.n,.n{font-family:var(--mono);font-variant-numeric:tabular-nums}td.src{color:var(--muted);font-size:.85em;word-break:break-all}
+.wrap{overflow-x:auto}.nw,td code{white-space:nowrap}
+.pill{display:inline;padding:0;background:none;color:var(--muted);font:12px/1.5 var(--mono);white-space:nowrap}
+.pill.live{color:var(--ink)}.pill.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:0 .45em .1em 0;vertical-align:middle}
+
+/* tiles: card, navy line icon, big figure, label, one line, View. The second tile in a row of four carries the navy top rule (none at phone width). */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin:1rem 0}
+.grid.four{grid-template-columns:repeat(4,1fr)}
+.tile{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:1.3rem 1.3rem 1.2rem;display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.grid.four .tile:nth-child(2){border-top:3px solid var(--navy)}
+.tile .v{font:700 clamp(28px,2.9vw,40px)/1.1 var(--sans);font-variant-numeric:tabular-nums;color:var(--navy);overflow-wrap:anywhere}
+.tile .v .ic{display:block;width:28px;height:28px;margin:0 0 .9rem}
+.tile .k{font:600 15px/1.35 var(--sans);color:var(--navy)}.tile .s{color:var(--muted);font-size:14px;line-height:1.45}
+.view{margin-top:auto;padding-top:.6rem;display:inline-flex;align-items:center;gap:.35rem;font-weight:600;font-size:15px;text-decoration:none}.view .ic{width:16px;height:16px}.view:hover{text-decoration:underline}
+.markets{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1rem 0}
+.tile.mkt{text-decoration:none;color:var(--ink);gap:.25rem}.tile.mkt:hover{border-color:var(--navy)}
+.tile.mkt>.ic{width:26px;height:26px;margin:0 0 .6rem}.tile.mkt .nm{font:600 18px/1.3 var(--sans);color:var(--navy)}.tile.mkt .rg{font-size:14px;color:var(--muted);line-height:1.4}
+.tile.mkt .ct{font:13px/1.5 var(--mono);color:var(--ink);margin-top:.35rem}.tile.mkt .st{font:12px/1.5 var(--mono);color:var(--ink)}
+
+/* cards and sections */
+.sec{margin:3.5rem 0 0}
+.cards{display:grid;gap:1rem;margin:1rem 0}.cards.three{grid-template-columns:repeat(3,1fr)}.cards.four{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;gap:.25rem}
+.card>.ic{width:28px;height:28px;margin:0 0 .6rem}.card p{margin:.2rem 0 1rem;color:var(--ink)}.card .btn{margin-top:auto;align-self:flex-start}
+.under{color:var(--muted);margin:1rem 0 0}.under a{color:var(--navy)}
+dl.rows{grid-template-columns:max-content 1fr;gap:0;margin:.5rem 0}dl.rows dt,dl.rows dd{padding:.95rem 0;border-top:1px solid var(--rule)}dl.rows dt{padding-right:1.1rem;padding-top:1.05rem}
+dl.rows dd{display:flex;gap:.8rem;align-items:flex-start}dl.rows dd .ic{width:22px;height:22px;margin-top:.1rem}
+.where{margin:3.5rem 0 0;color:var(--ink)}
+.card-sec{border:1px solid var(--rule);border-radius:14px;padding:1.75rem;background:var(--card);margin:1.5rem 0 0}.card-sec .actions{margin:1rem 0 0}
+.addr{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin:1rem 0}.addr code{font-size:15px;padding:.65rem .9rem;border:1px solid var(--rule);border-radius:10px;word-break:break-all}
+.copy{padding:.6rem 1.1rem}
+.duty{border-left:3px solid var(--navy);padding:.2rem 0 .2rem .9rem;margin:1rem 0}.duty dl{margin:.2rem 0}
+.record{border:1px solid var(--rule);border-radius:14px;padding:.9rem 1.1rem;margin:.8rem 0;background:var(--card)}.record .head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.3rem;font:12px/1.5 var(--mono);color:var(--muted)}.record .issuer{font:600 1.2rem/1.3 var(--sans);color:var(--navy);margin:.3rem 0}
+.bars{display:flex;align-items:flex-end;gap:2px;height:40px;margin:.3rem 0}.bars i{display:block;flex:1;background:var(--navy);min-width:2px}
+
+/* contact block of record: labels above, full column width, navy outline at all times */
+.contact h2{margin-top:0}
+form{margin:.8rem 0}label{display:block;margin:.8rem 0 .35rem;font:600 14px/1.4 var(--sans);color:var(--navy)}
+input,textarea{display:block;width:100%;padding:.7rem .85rem;border:1.5px solid var(--navy);border-radius:10px;font:inherit;color:var(--ink);background:var(--paper)}
+input:focus,textarea:focus{outline:2px solid var(--navy);outline-offset:2px}
+form button[type=submit]{display:inline-flex;margin:1rem 0 0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* brand band above the one-row footer */
+footer{margin-top:4.5rem;padding-bottom:2rem;color:var(--muted);font-size:14px}
+.band{background:var(--tint);border:1px solid var(--rule);border-radius:14px;padding:2rem 2rem 1.8rem;margin:0 0 1.5rem}
+.band p{margin:.3rem 0;color:var(--ink);font-size:16px;max-width:75ch}.band .tag{font:700 24px/1.3 var(--sans);color:var(--navy);margin:0 0 .5rem}
+footer .line,footer .row{margin:.5rem 0;line-height:1.7}footer a{color:var(--navy)}
+
+/* dark ground: the logo swaps (one img; the dark file loads only on the dark ground); the favicon does not */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo img{content:url(/allooloo-logo-dark.svg)}:root:not([data-theme="light"]) .tint .sun{display:block}:root:not([data-theme="light"]) .tint .moon{display:none}}
+:root[data-theme="dark"] .logo img{content:url(/allooloo-logo-dark.svg)}:root[data-theme="dark"] .tint .sun{display:block}:root[data-theme="dark"] .tint .moon{display:none}
+
+@media (max-width:980px){.grid.four,.markets,.cards.four{grid-template-columns:repeat(2,1fr)}.cards.three{grid-template-columns:1fr}}
+@media (max-width:760px){nav{order:3;flex-basis:100%;margin-left:0}nav ul{gap:.2rem 1.4rem}.tint{margin-left:auto}.bar .in{gap:.4rem .75rem}}
+@media (max-width:640px){body{font-size:15px}h1{font-size:40px}.lead{font-size:16.5px}dl{grid-template-columns:1fr}dt{margin-top:.3rem}dl.rows{grid-template-columns:1fr}dl.rows dt{border-top:1px solid var(--rule);padding-bottom:0}dl.rows dd{border-top:0;padding-top:.3rem}
+  .grid.four,.markets,.cards.four{grid-template-columns:1fr}.grid.four .tile:nth-child(2){border-top:1px solid var(--rule)}.band{padding:1.4rem}.card-sec{padding:1.25rem}.logo img{height:30px}.cta{padding:.5rem .9rem;font-size:14px}}
+.dot.amber{background:#c98a0b}   /* NAV-02: the doors readout, not answering */
+/* ALLOOLOO-PRESS-02 (2026-11-21): an outlet list in columns — three on a desktop screen, two on a tablet, one on a phone; down each column, then across. Same text, size and colour; no bullets. */
+ul.cols{columns:3;column-gap:2rem;list-style:none;margin:.5rem 0 1.25rem;padding:0}ul.cols li{break-inside:avoid;margin:0 0 .3rem;padding:0}
+@media (max-width:1024px){ul.cols{columns:2}}
+@media (max-width:640px){ul.cols{columns:1}}

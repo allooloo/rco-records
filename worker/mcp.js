@@ -7,11 +7,16 @@ import { hashOf, idOf, decOf, idOk, sign, sha256hex, second, unb64u, PUBLIC } fr
 import { JWKS, ORIGIN, DEFINITION } from "./kit.js";
 import { keyFromValue } from "./register.js";
 
-export const SERVER = { name: "rco-records", title: "RCO Records — Record of Cleared Orders", protocolVersion: "2025-06-18" };
+export const SERVER = { name: "rco-records", title: "Allooloo Receipts", protocolVersion: "2025-06-18" };   // ALLOOLOO-RCO-01 G4: the name stays; the title is the statement entry's short name (this is the fallback)
+// ALLOOLOO-RCO-01 F: the five tools in this order, wherever they are listed (the tool list, the MCP server card, the agent card, the pages)
+export const ORDER = ["verify_receipt", "list_receipts", "get_statement", "issue_auditor_key", "write_receipt"];
+export const ordered = (list) => [...list].sort((a, b) => ORDER.indexOf(a.name || a.id) - ORDER.indexOf(b.name || b.id));
+import * as STR from "./statement.js";
+export async function titleOf(env) { try { const S = await STR.statement(env); const e = S && S.sites && S.sites.entries && S.sites.entries["rco-records.ai"]; return (e && e.short) || SERVER.title; } catch (e) { return SERVER.title; } }
 export const TOOLS = [
   {
     name: "write_receipt",
-    description: "Write one v1 receipt for a read a gate has cleared. Authenticated: Authorization: Bearer <writer token>. Idempotent on (writer, subject, subject_type, market, rule_version, cleared_at, answer_hash). Returns the receipt.",
+    description: "Called by Allooloo's own MCPs when a read is cleared. One receipt per cleared read.",
     inputSchema: {
       type: "object",
       properties: {
@@ -30,7 +35,7 @@ export const TOOLS = [
   },
   {
     name: "verify_receipt",
-    description: "Return one receipt by id (rco:… for v1, dec_… for v0) with the verification result (hash, id, signature) and the public key (JWK) that checks it. Public.",
+    description: "Check any receipt by its id: the hash, the signature and its place in the chain. Public, no key needed.",
     inputSchema: { type: "object", properties: { id: { type: "string", description: "rco:… or dec_…" } }, required: ["id"] },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -158,7 +163,7 @@ export async function verifyReceipt(env, rid) {
 
 // extra: { tools: [...], call: async (name, args, request, env) => result | undefined } — later orders add tools without touching this file's core.
 export async function handleMcp(request, env, url, extra = { tools: [], call: async () => undefined }) {
-  const tools = [...TOOLS, ...extra.tools];
+  const tools = ordered([...TOOLS, ...extra.tools]);
   const origin = request.headers.get("origin");
   if (origin && !/^https:\/\//i.test(origin)) return new Response(JSON.stringify(rpcErr(null, -32600, "origin not allowed")), { status: 403, headers: JSONH });
   const H = { ...JSONH, "access-control-allow-origin": origin || "*", "access-control-allow-methods": "POST, GET, OPTIONS", "access-control-allow-headers": "Content-Type, Accept, Authorization, Mcp-Session-Id, Mcp-Protocol-Version", vary: "Origin" };
@@ -172,7 +177,7 @@ export async function handleMcp(request, env, url, extra = { tools: [], call: as
     if (!m || m.jsonrpc !== "2.0" || typeof m.method !== "string") { out.push(rpcErr(id, -32600, "invalid request")); continue; }
     if (m.method.startsWith("notifications/")) continue;
     try {
-      if (m.method === "initialize") out.push(rpc(id, { protocolVersion: (m.params && m.params.protocolVersion) || SERVER.protocolVersion, capabilities: { tools: { listChanged: false } }, serverInfo: { name: SERVER.name, title: SERVER.title, version: env.VERSION }, instructions: DEFINITION + " Errors are typed. Nothing is answered from memory." }));
+      if (m.method === "initialize") out.push(rpc(id, { protocolVersion: (m.params && m.params.protocolVersion) || SERVER.protocolVersion, capabilities: { tools: { listChanged: false } }, serverInfo: { name: SERVER.name, title: await titleOf(env), version: env.VERSION }, instructions: DEFINITION + " Errors are typed. Nothing is answered from memory." }));
       else if (m.method === "ping") out.push(rpc(id, {}));
       else if (m.method === "tools/list") out.push(rpc(id, { tools }));
       else if (m.method === "tools/call") {
