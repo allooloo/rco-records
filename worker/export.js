@@ -6,6 +6,10 @@ const enc = new TextEncoder();
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 async function hmac(key, msg) { const k = await crypto.subtle.importKey("raw", typeof key === "string" ? enc.encode(key) : key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); return new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(msg))); }
 async function put(env, key, body) {
+  const ph = hex(await crypto.subtle.digest("SHA-256", enc.encode(body))), r = await again(() => putOnce(env, key, body));
+  return { key, status: r.status, sha256: ph, error: r.ok ? null : (await r.text()).slice(0, 300) };
+}
+async function putOnce(env, key, body) {
   const bucket = env.EXPORT_BUCKET, region = env.EXPORT_REGION, host = `${bucket}.s3.${region}.amazonaws.com`;
   const now = new Date(), amz = now.toISOString().replace(/[:-]|\.\d{3}/g, ""), d = amz.slice(0, 8);
   const bytes = enc.encode(body), ph = hex(await crypto.subtle.digest("SHA-256", bytes));
@@ -17,7 +21,7 @@ async function put(env, key, body) {
   let k = await hmac("AWS4" + String(env.EXPORT_SECRET).trim(), d); for (const p of [region, "s3", "aws4_request"]) k = await hmac(k, p);
   const auth = `AWS4-HMAC-SHA256 Credential=${String(env.EXPORT_KEY_ID).trim()}/${scope}, SignedHeaders=${names.join(";")}, Signature=${hex(await hmac(k, sts))}`;
   const r = await fetch(`https://${host}/${key}`, { method: "PUT", headers: { ...H, Authorization: auth }, body: bytes });
-  return { key, status: r.status, sha256: ph, error: r.ok ? null : (await r.text()).slice(0, 300) };
+  return r;
 }
 // ALLOOLOO-FIX 2026-11-03: streamed. The snapshot (tip, count) is fixed first; rows are read 5,000 at a time up to that tip and serialised straight
 // into S3 multipart parts (~8 MB each, each with its own sha256 checksum); the body's sha256 by crypto.DigestStream. Same object bytes and layout as before.
@@ -32,7 +36,21 @@ async function page(env, last, tipSeq) {
   }
 }
 const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
-async function s3(env, method, key, query, headers, bytes) {
+// ALLOOLOO-DIGEST-1127 (2026-11-27): the 11-27 05:30 run lost part 6 to "520 error code: 520" (the S3 call came back with no answer) and the whole night
+// with it; nothing retried a part. Every S3 call (create, part, complete, manifest) is now asked again, freshly signed, on a 5xx or a call that threw,
+// up to four tries (1 s, 2 s, 4 s apart). A part PUT again under the same number replaces the first; a 4xx is never asked again.
+async function again(fn) {
+  for (let i = 0; ; i++) {
+    let r = null, e = null;
+    try { r = await fn(); } catch (x) { e = x; }
+    if (r && r.status < 500) return r;
+    if (i >= 3) { if (r) return r; throw e; }
+    if (r) { try { await r.text(); } catch {} }
+    await nap(1000 * 2 ** i);
+  }
+}
+const s3 = (env, method, key, query, headers, bytes) => again(() => s3once(env, method, key, query, headers, bytes));
+async function s3once(env, method, key, query, headers, bytes) {
   const bucket = env.EXPORT_BUCKET, region = env.EXPORT_REGION, host = `${bucket}.s3.${region}.amazonaws.com`;
   const now = new Date(), amz = now.toISOString().replace(/[:-]|\.\d{3}/g, ""), d = amz.slice(0, 8);
   const body = bytes || new Uint8Array(0), ph = hex(await crypto.subtle.digest("SHA-256", body));
